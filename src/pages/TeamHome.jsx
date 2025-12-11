@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Header from '../components/Header'
 import { Button } from 'reactstrap';
 import { useNavigate } from 'react-router-dom';
@@ -8,12 +8,17 @@ import { FaEdit, FaTrash } from 'react-icons/fa';
 import AddMemberModal from '../components/AddMemberModal';
 import { ProgressBar } from 'react-bootstrap';
 import { Box, Chip, TextField } from '@mui/material';
+import axios from 'axios';
+import { BACKEND_ENDPOINT } from '../api/api';
 
 const TeamHome = () => {
 
   const navigate = useNavigate();
   const [showAddSupervisor, setShowAddSupervisor] = useState(false);
   const [qMandal, setQMandal] = useState("");
+  const [ahevaals, setAhevaals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleAddSupervisor = () => setShowAddSupervisor(true);
 
@@ -22,13 +27,26 @@ const TeamHome = () => {
   const progress = sevak_target > 0 ? (achievedTarget / sevak_target) * 100 : 0;
   const progressClamped = Math.max(0, Math.min(100, Math.round(progress)));
 
-  const showUpdateSupervisorModal = () => {
-    alert("Update Supervisor clicked");
-  }
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
+    axios.defaults.baseURL = BACKEND_ENDPOINT;
+    fetchAhevaals();
+  }, []);
 
-  const showDeleteSupervisorModal = () => {
-    alert("Delete Supervisor clicked");
-  }
+  const fetchAhevaals = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios.get(`${BACKEND_ENDPOINT}ahevaals/my`);
+      setAhevaals(res.data || []);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to load data");
+      setAhevaals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -102,40 +120,40 @@ const TeamHome = () => {
         </Box>
 
         <div style={{ overflowX: "auto", marginTop: "20px", marginInline: "12px" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
-            <thead>
-              <tr style={{ backgroundColor: "#f2f2f2" }}>
-                <th style={{ border: "1px solid #ddd", padding: "10px" }}>ID</th>
-                <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name</th>
-                <th style={{ border: "1px solid #ddd", padding: "10px" }}>Address</th>
-                <th style={{ border: "1px solid #ddd", padding: "10px" }}>DOB</th>
-                <th style={{ border: "1px solid #ddd", padding: "10px" }}>Phone</th>
-              </tr>
-            </thead>
+          {error && <div style={{ color: "red", padding: "8px" }}>{error}</div>}
+          {loading && <div style={{ padding: "8px" }}>Loading...</div>}
+          {!loading && !error && (
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#f2f2f2" }}>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>#</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Phone</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Address</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              <tr>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>1</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>Ravi Patel</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>B14 Tulsidham Society 390011</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>12-04-2000</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>9876543210</td>
-              </tr>
-
-              <tr>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>2</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>Aryan Vyas</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>A-22 Opp. Jay Ambe School 390011</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>05-06-1997</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>8765432109</td>
-              </tr>
-            </tbody>
-          </table>
+              <tbody>
+                {ahevaals.map((item, idx) => (
+                  <tr key={item._id || idx}>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{idx + 1}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.name}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.phone}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.address || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div >
 
       {showAddSupervisor && (
-        <AddMemberModal modal={showAddSupervisor} setModal={setShowAddSupervisor} />
+        <AddMemberModal
+          modal={showAddSupervisor}
+          setModal={setShowAddSupervisor}
+          onSuccess={fetchAhevaals}
+        />
       )}
     </>
   )

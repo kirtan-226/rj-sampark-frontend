@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import { BACKEND_ENDPOINT } from "../api/api";
 import axios from "axios";
@@ -6,43 +6,32 @@ import { toast, ToastContainer } from "react-toastify";
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import CircularProgress from "@mui/material/CircularProgress";
-import {
-  Button,
-  InputLabel,
-  MenuItem,
-  Select,
-} from "@mui/material";
+import { Button } from "@mui/material";
 
-function AddMemberModal({ modal, setModal }) {
-
-  const me = JSON.parse(localStorage.getItem("sevakDetails")) || {};
-  const mySevakCode = me?.sevak_code || me?.sevak_id || "";
+function AddMemberModal({ modal, setModal, onSuccess }) {
+  const token = localStorage.getItem("authToken");
+  if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
+  axios.defaults.baseURL = BACKEND_ENDPOINT;
 
   const [loader, setLoader] = useState(false);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    dob: "",
     address: "",
+    specialExp: "",
   });
   const toggle = () => setModal(!modal);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    let v = value;
-
-    setFormData((p) => ({ ...p, [name]: v }));
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
   const validateForm = () => {
     const errs = {};
-    if (!formData.dob) errs.dob = "Enter Date of Birth";
     if (!formData.name) errs.name = "Enter Name";
     if (!formData.phone) errs.phone = "Enter Phone No";
-    if (!formData.address) errs.address = "Enter Address";
-
     return errs;
   };
 
@@ -61,13 +50,16 @@ function AddMemberModal({ modal, setModal }) {
       const payload = {
         name: formData.name,
         phone: formData.phone,
-        dob: formData.dob,
         address: formData.address,
-        sevak_id: mySevakCode,
+        specialExp: formData.specialExp,
       };
-      alert("New member added: " + JSON.stringify(payload));
+      await axios.post(`${BACKEND_ENDPOINT}ahevaals`, payload);
+      toast.success("Ahevaal submitted");
+      if (onSuccess) onSuccess();
+      setFormData({ name: "", phone: "", address: "", specialExp: "" });
     } catch (error) {
-      toast.error("An error occurred: " + error.message);
+      const msg = error.response?.data?.message || error.message || "Failed to submit";
+      toast.error(msg);
     } finally {
       setLoader(false);
       toggle();
@@ -112,59 +104,29 @@ function AddMemberModal({ modal, setModal }) {
 
           <FormControl fullWidth variant="outlined" margin="normal">
             <TextField
-              label="Date of Birth"
-              name="dob"
-              type="date"
-              value={formData.dob}
-              onChange={handleChange}
-              variant="outlined"
-              color="secondary"
-              InputLabelProps={{ shrink: true }}   // Ensures label doesn't overlap
-              error={!!errors.dob}
-              helperText={errors.dob}
-              fullWidth
-            />
-          </FormControl>
-
-          <FormControl fullWidth variant="outlined" margin="normal">
-            <TextField
-              label="Address"
+              label="Address (optional)"
               name="address"
               type="text"
               value={formData.address}
               onChange={handleChange}
               variant="outlined"
               color="secondary"
-              error={!!errors.address}
-              helperText={errors.address}
               fullWidth
             />
           </FormControl>
 
-          {/* <FormControl fullWidth variant="outlined" margin="normal" size="small">
-            <InputLabel id="mandal-select-label">મંડળ</InputLabel>
-            <Select
-              labelId="mandal-select-label"
-              label="મંડળ"
-              name="mandal"
-              value={formData.mandal}
+          <FormControl fullWidth variant="outlined" margin="normal">
+            <TextField
+              label="Special Experience (optional)"
+              name="specialExp"
+              type="text"
+              value={formData.specialExp}
               onChange={handleChange}
-              error={!!errors.mandal}
-            >
-              <MenuItem key="SJ" value="SJ">
-                સહજાનંદ (SJ)
-              </MenuItem>
-              <MenuItem key="NK" value="NK">
-                નારાયણકુંજ (NK)
-              </MenuItem>
-              <MenuItem key="SRB" value="SRB">
-                સુરભિ (SRB)
-              </MenuItem>
-            </Select>
-            {errors.mandal && (
-              <div style={{ color: "#d32f2f", fontSize: 12, marginTop: 4 }}>{errors.mandal}</div>
-            )}
-          </FormControl> */}
+              variant="outlined"
+              color="secondary"
+              fullWidth
+            />
+          </FormControl>
         </ModalBody>
 
         <ModalFooter>
@@ -188,7 +150,6 @@ function AddMemberModal({ modal, setModal }) {
         </ModalFooter>
       </Modal>
 
-      {/* keep if you don’t already have a global container */}
       <ToastContainer position="top-center" autoClose={5000} pauseOnHover theme="colored" />
     </div>
   );
