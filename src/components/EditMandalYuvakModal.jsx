@@ -6,14 +6,9 @@ import { toast, ToastContainer } from "react-toastify";
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import CircularProgress from "@mui/material/CircularProgress";
-import {
-  Button,
-  InputLabel,
-  MenuItem,
-  Select,
-} from "@mui/material";
+import { Button, InputLabel, MenuItem, Select } from "@mui/material";
 
-function EditMandalYuvakModal({ modal, setModal }) {
+function EditMandalYuvakModal({ modal, setModal, user, teams = [], onSuccess }) {
 
   const me = JSON.parse(localStorage.getItem("sevakDetails")) || {};
   const mySevakCode = me?.sevak_code || me?.sevak_id || "";
@@ -23,8 +18,19 @@ function EditMandalYuvakModal({ modal, setModal }) {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
+    teamId: "",
   });
   const toggle = () => setModal(!modal);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        phone: user.phone || "",
+        teamId: user.teamId?._id || user.teamId || "",
+      });
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,11 +63,13 @@ function EditMandalYuvakModal({ modal, setModal }) {
       const payload = {
         name: formData.name,
         phone: formData.phone,
-        sevak_id: mySevakCode,
+        teamId: formData.teamId || null,
       };
-      alert("Updated details: " + JSON.stringify(payload));
+      await axios.patch(`${BACKEND_ENDPOINT}users/${user._id}`, payload);
+      toast.success("Yuvak updated");
+      if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error("An error occurred: " + error.message);
+      toast.error(error?.response?.data?.message || error.message);
     } finally {
       setLoader(false);
       toggle();
@@ -102,6 +110,24 @@ function EditMandalYuvakModal({ modal, setModal }) {
               fullWidth
               inputProps={{ inputMode: "numeric", pattern: "[0-9]{10}", maxLength: 10 }}
             />
+          </FormControl>
+
+          <FormControl fullWidth variant="outlined" margin="normal" size="small">
+            <InputLabel id="team-select-label">Team</InputLabel>
+            <Select
+              labelId="team-select-label"
+              label="Team"
+              name="teamId"
+              value={formData.teamId}
+              onChange={handleChange}
+            >
+              <MenuItem value="">Not Assigned</MenuItem>
+              {teams.map((t) => (
+                <MenuItem key={t._id || t.teamCode} value={t._id}>
+                  {t.teamCode ? `${t.teamCode} - ${t.name}` : t.name}
+                </MenuItem>
+              ))}
+            </Select>
           </FormControl>
 
         </ModalBody>

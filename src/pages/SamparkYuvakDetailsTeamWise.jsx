@@ -1,163 +1,184 @@
-import React, { useState } from 'react'
-import { FaEdit, FaTrash } from "react-icons/fa";
-import EditMemberModal from "../components/EditMandalYuvakModal";
-import { teamMandalData, teamSamparkData } from "../api/data";
-import EditMandalYuvakModal from "../components/EditMandalYuvakModal";
-import Header from '../components/Header';
-import EditSamparkYuvakModal from '../components/EditSamparkYuvakModal';
+import React, { useEffect, useState } from "react";
+import Header from "../components/Header";
+import axios from "axios";
+import { BACKEND_ENDPOINT } from "../api/api";
 
 export default function SamparkYuvakDetailsTeamWise() {
-    const [openTeam, setOpenTeam] = useState(null);
-    const [showEditMember, setShowEditMember] = useState(false);
+  const [openTeam, setOpenTeam] = useState(null);
+  const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    const sevakDetails = JSON.parse(localStorage.getItem("sevakDetails"));
-    const role = sevakDetails.role;
-    const isAdmin = role === "Admin";
-    const isSanchalak = role === "Sanchalak";
-
-    const handleEditMember = () => setShowEditMember(true);
-    const handleDeleteMember = () => {
-        alert("Sure want to remove member from this team ?");
-    };
-
-    const toggleOpen = (teamId) => {
-        setOpenTeam(openTeam === teamId ? null : teamId);
-    };
-
-    const showUpdateMemberModal = () => {
-        alert("Update Member clicked");
+  const sevakDetails = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("sevakDetails") || "{}");
+    } catch {
+      return {};
     }
+  })();
+  const mandalId = sevakDetails?.mandal_id || sevakDetails?.mandalId || null;
 
-    const showDeleteMemberModal = () => {
-        alert("Delete Member clicked");
+  const toggleOpen = (teamId) => setOpenTeam(openTeam === teamId ? null : teamId);
+
+  const fetchTeamsWithAhevaals = async () => {
+    if (!mandalId) {
+      setError("Mandal not set for current user");
+      return;
     }
+    setLoading(true);
+    setError("");
+    try {
+      const resTeams = await axios.get(`${BACKEND_ENDPOINT}teams/mandal/${mandalId}`);
+      const teamList = Array.isArray(resTeams.data) ? resTeams.data : [];
 
-    return (
-        <>
-            <Header />
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingTop: '20px',
-                marginInline: '15px'
-            }}>
-                <h5 style={{ margin: 0, whiteSpace: "nowrap", marginLeft: "10px" }} >Sampark Yuvak Details</h5>
-            </div>
+      const enriched = await Promise.all(
+        teamList.map(async (t) => {
+          try {
+            const resA = await axios.get(`${BACKEND_ENDPOINT}ahevaals/mandal`, {
+              params: { teamId: t._id },
+            });
+            const ahevaals = Array.isArray(resA.data) ? resA.data : [];
+            return { ...t, ahevaals };
+          } catch (err) {
+            console.error("ahevaal fetch error", err);
+            return { ...t, ahevaals: [] };
+          }
+        })
+      );
+      setTeams(enriched);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err.message || "Failed to load teams";
+      setError(msg);
+      setTeams([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            <div style={{ width: "90%", margin: "auto", marginTop: "30px" }}>
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
+    axios.defaults.baseURL = BACKEND_ENDPOINT;
+    fetchTeamsWithAhevaals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-                {teamSamparkData.teams.map(team => (
-                    <div
-                        key={team.id}
-                        style={{
-                            border: "1px solid #ddd",
-                            borderRadius: "8px",
-                            marginBottom: "12px",
-                            background: "#fff",
-                            boxShadow: "0 2px 5px rgba(0,0,0,0.05)"
-                        }}
+  return (
+    <>
+      <Header />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingTop: "20px",
+          marginInline: "15px",
+        }}
+      >
+        <h5 style={{ margin: 0, whiteSpace: "nowrap", marginLeft: "10px" }}>
+          Sampark Yuvak Details
+        </h5>
+      </div>
+
+      <div style={{ width: "90%", margin: "auto", marginTop: "30px" }}>
+        {error && <div style={{ padding: "10px", color: "#b00020" }}>{error}</div>}
+        {loading && <div style={{ padding: "10px" }}>Loading...</div>}
+
+        {!loading &&
+          teams.map((team) => {
+            const key = team._id || team.teamCode || team.name;
+            return (
+              <div
+                key={key}
+                style={{
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  marginBottom: "12px",
+                  background: "#fff",
+                  boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+                }}
+              >
+                <div
+                  onClick={() => toggleOpen(key)}
+                  style={{
+                    padding: "12px 16px",
+                    fontWeight: "600",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    cursor: "pointer",
+                    background: "#fafafa",
+                    fontSize: "17px",
+                  }}
+                >
+                  {team.teamCode ? `${team.teamCode} - ${team.name}` : team.name || "Team"}
+                  <span>{openTeam === key ? "▲" : "▼"}</span>
+                </div>
+
+                {openTeam === key && (
+                  <div style={{ padding: "12px", overflowX: "auto" }}>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        textAlign: "left",
+                      }}
                     >
-                        <div
-                            onClick={() => toggleOpen(team.id)}
-                            style={{
-                                padding: "12px 16px",
-                                fontWeight: "600",
-                                display: "flex",
-                                justifyContent: "space-between",
-                                cursor: "pointer",
-                                background: "#fafafa",
-                                fontSize: "17px"
-                            }}
-                        >
-                            {team.teamName}
-                            <span>{openTeam === team.id ? "▲" : "▼"}</span>
-                        </div>
-
-                        {openTeam === team.id && (
-                            <div style={{ padding: "12px", overflowX: "auto" }}>
-
-                                <table
-                                    style={{
-                                        width: "100%",
-                                        borderCollapse: "collapse",
-                                        textAlign: "left"
-                                    }}
-                                >
-                                    <thead>
-                                        <tr style={{ background: "#f5f5f5" }}>
-                                            <th style={th}>Id</th>
-                                            <th style={th}>Sampark Yuvak Name</th>
-                                            <th style={th}>Phone</th>
-                                            <th style={th}>DOB</th>
-                                            <th style={th}>Address</th>
-                                            {(isAdmin || isSanchalak) ? <th style={th}>Actions</th> : null}
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {team.members.map(m => (
-                                            <tr key={m.id}>
-                                                <td style={td}>{m.id}</td>
-                                                <td style={td}>{m.name}</td>
-                                                <td style={td}>{m.phone}</td>
-                                                <td style={td}>{m.dob}</td>
-                                                <td style={td}>{m.address}</td>
-                                                {(isAdmin || isSanchalak) && (
-                                                    <td style={{ border: "1px solid #ddd", padding: "10px", textAlign: "center", whiteSpace: "nowrap" }}>
-                                                        <FaEdit
-                                                            style={{
-                                                                cursor: "pointer",
-                                                                marginRight: "15px"
-                                                            }}
-                                                            size={18}
-                                                            color="green"
-                                                            onClick={handleEditMember}
-                                                        />
-                                                        {isAdmin && (
-                                                            <FaTrash
-                                                                style={{
-                                                                    cursor: "pointer",
-                                                                    marginRight: "15px"
-                                                                }}
-                                                                size={18}
-                                                                color="red"
-                                                                onClick={handleDeleteMember}
-                                                            />
-                                                        )}
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-
-                                </table>
-                            </div>
+                      <thead>
+                        <tr style={{ background: "#f5f5f5" }}>
+                          <th style={th}>#</th>
+                          <th style={th}>Name</th>
+                          <th style={th}>Phone</th>
+                          <th style={th}>Address</th>
+                          <th style={th}>Start</th>
+                          <th style={th}>End</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(team.ahevaals || []).map((a, idx) => (
+                          <tr key={a._id || idx}>
+                            <td style={td}>{idx + 1}</td>
+                            <td style={td}>{a.name || "-"}</td>
+                            <td style={td}>{a.phone || "-"}</td>
+                            <td style={td}>{a.address || "-"}</td>
+                            <td style={td}>
+                              {a.startTime ? new Date(a.startTime).toLocaleString() : "-"}
+                            </td>
+                            <td style={td}>
+                              {a.endTime ? new Date(a.endTime).toLocaleString() : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                        {(team.ahevaals || []).length === 0 && (
+                          <tr>
+                            <td colSpan={6} style={{ ...td, textAlign: "center" }}>
+                              No ahevaals for this team.
+                            </td>
+                          </tr>
                         )}
-                    </div>
-                ))}
-
-            </div>
-
-            {showEditMember && (
-                <EditSamparkYuvakModal modal={showEditMember} setModal={setShowEditMember} />
-            )}
-        </>
-    )
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+      </div>
+    </>
+  );
 }
 
 const th = {
-    padding: "10px",
-    borderBottom: "2px solid #ddd",
-    fontSize: "14px",
-    textAlign: "center",
-    whiteSpace: "nowrap"
+  padding: "10px",
+  borderBottom: "2px solid #ddd",
+  fontSize: "14px",
+  textAlign: "center",
+  whiteSpace: "nowrap",
 };
 
 const td = {
-    padding: "10px",
-    borderBottom: "1px solid #eee",
-    fontSize: "14px",
-    textAlign: "center",
-    whiteSpace: "nowrap"
+  padding: "10px",
+  borderBottom: "1px solid #eee",
+  fontSize: "14px",
+  textAlign: "center",
+  whiteSpace: "nowrap",
 };

@@ -20,6 +20,7 @@ import {
 function AddSupervisorModal({ modal, setModal }) {
   const me = JSON.parse(localStorage.getItem("sevakDetails")) || {};
   const mySevakCode = me?.sevak_code || me?.sevak_id || "";
+  const myMandalId = me?.mandal_id || me?.mandalId || null;
 
   const [loader, setLoader] = useState(false);
   const [formData, setFormData] = useState({
@@ -62,22 +63,33 @@ function AddSupervisorModal({ modal, setModal }) {
     }
 
     try {
+      const roleMap = {
+        sant_nirdeshak: "NIRDESHAK",
+        nirdeshak: "NIRDESHAK",
+        nirikshak: "NIRIKSHAK",
+        sanchalak: "SANCHALAK",
+      };
+
       const payload = {
         name: formData.name,
         phone: formData.phone,
-        post: formData.post,
-        mandal: formData.mandal,
-        sevak_id: mySevakCode,
+        role: roleMap[formData.post] || "NIRIKSHAK",
+        mandalId: myMandalId || undefined,
+        assignedMandals: [],
       };
 
-      alert("Work in progress: " + JSON.stringify(payload));
+      const res = await axios.post(`${BACKEND_ENDPOINT}users`, payload);
+      toast.success(`User created. ID: ${res.data?.userId}, Pass: ${res.data?.password}`);
+      setFormData({ name: "", phone: "", post: "", mandal: "" });
+      setErrors({});
+      toggle();
 
     } catch (error) {
       console.error("add_supervisor error:", error);
-      toast.error(error || "An error occurred");
+      const message = error?.response?.data?.message || error.message || "An error occurred";
+      toast.error(message);
     } finally {
       setLoader(false);
-      toggle();
     }
   };
 

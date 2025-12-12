@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from "react";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaTrash } from "react-icons/fa";
+import axios from "axios";
+import { BACKEND_ENDPOINT } from "../api/api";
 import EditMandalYuvakModal from "./EditMandalYuvakModal";
 
-export default function SupervisorTeams({ teams = [], loading = false, error = "" }) {
+export default function SupervisorTeams({ teams = [], loading = false, error = "", refreshTeams }) {
   const [openTeam, setOpenTeam] = useState(null);
-  const [showEditMember, setShowEditMember] = useState(false);
   const [qSevak, setQSevak] = useState("");
+  const [editMember, setEditMember] = useState(null);
 
   const sevakDetails = JSON.parse(localStorage.getItem("sevakDetails") || "{}");
   const role = (sevakDetails?.role || sevakDetails?.role_code || "").toUpperCase();
@@ -34,6 +36,29 @@ export default function SupervisorTeams({ teams = [], loading = false, error = "
           team.teamCode?.toLowerCase().includes(query)
       );
   }, [teams, qSevak]);
+
+  const handleDeleteTeam = async (team) => {
+    if (!team?._id) return;
+    const confirm = window.confirm(`Delete team ${team.name || team.teamCode || ""}?`);
+    if (!confirm) return;
+    try {
+      await axios.delete(`${BACKEND_ENDPOINT}teams/${team._id}`);
+      if (typeof refreshTeams === "function") refreshTeams();
+    } catch (err) {
+      alert(err?.response?.data?.message || err.message || "Failed to delete team");
+    }
+  };
+
+  const handleSetLeader = async (teamId, memberId) => {
+    try {
+      await axios.patch(`${BACKEND_ENDPOINT}teams/${teamId}`, {
+        leader: memberId,
+      });
+      if (typeof refreshTeams === "function") refreshTeams();
+    } catch (err) {
+      alert(err?.response?.data?.message || err.message || "Failed to update leader");
+    }
+  };
 
   return (
     <>
@@ -77,88 +102,129 @@ export default function SupervisorTeams({ teams = [], loading = false, error = "
           </div>
         )}
 
-        {filteredTeams.map((team) => (
-          <div
-            key={team._id || team.teamCode || team.name}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-              marginBottom: "12px",
-              background: "#fff",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
-            }}
-          >
+        {filteredTeams.map((team) => {
+          const key = team._id || team.teamCode || team.name;
+          return (
             <div
-              onClick={() => toggleOpen(team._id || team.teamCode || team.name)}
+              key={key}
               style={{
-                padding: "12px 16px",
-                fontWeight: "600",
-                display: "flex",
-                justifyContent: "space-between",
-                cursor: "pointer",
-                background: "#fafafa",
-                fontSize: "17px",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                marginBottom: "12px",
+                background: "#fff",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
               }}
             >
-              <span>
-                {team.teamCode ? `${team.teamCode} - ` : ""}
-                {team.name || "Team"}
-              </span>
-              <span>{openTeam === (team._id || team.teamCode || team.name) ? "-" : "+"}</span>
-            </div>
-
-            {openTeam === (team._id || team.teamCode || team.name) && (
-              <div style={{ padding: "12px", overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    textAlign: "left",
-                  }}
-                >
-                  <thead>
-                    <tr style={{ background: "#f5f5f5" }}>
-                      <th style={th}>Name</th>
-                      <th style={th}>Phone</th>
-                      {isAdmin || isSanchalak ? <th style={th}>Actions</th> : null}
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {(team.members || []).map((m) => (
-                      <tr key={m._id || m.userId || m.name}>
-                        <td style={td}>{m.name || m.userId || "-"}</td>
-                        <td style={td}>{m.phone || "-"}</td>
-                        {(isAdmin || isSanchalak) && (
-                          <td
-                            style={{
-                              border: "1px solid #ddd",
-                              padding: "10px",
-                              textAlign: "center",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            <FaEdit
-                              style={{
-                                cursor: "pointer",
-                              }}
-                              size={18}
-                              color="green"
-                              onClick={() => setShowEditMember(true)}
-                            />
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div
+                onClick={() => toggleOpen(key)}
+                style={{
+                  padding: "12px 16px",
+                  fontWeight: "600",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                  background: "#fafafa",
+                  fontSize: "17px",
+                }}
+              >
+                <span>
+                  {team.teamCode ? `${team.teamCode} - ` : ""}
+                  {team.name || "Team"}
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  {(isAdmin || isSanchalak) && (
+                    <FaTrash
+                      style={{ cursor: "pointer", color: "red" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTeam(team);
+                      }}
+                      title="Delete team"
+                    />
+                  )}
+                  {openTeam === key ? "-" : "+"}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
+
+              {openTeam === key && (
+                <div style={{ padding: "12px", overflowX: "auto" }}>
+                  <table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      textAlign: "left",
+                    }}
+                  >
+                    <thead>
+                      <tr style={{ background: "#f5f5f5" }}>
+                        <th style={th}>Name</th>
+                        <th style={th}>Phone</th>
+                        <th style={th}>Leader?</th>
+                        {(isAdmin || isSanchalak) ? <th style={th}>Actions</th> : null}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {(team.members || []).map((m) => {
+                        const isLeader = team.leader && m._id && team.leader.toString() === m._id.toString();
+                        return (
+                          <tr key={m._id || m.userId || m.name}>
+                            <td style={td}>{m.name || m.userId || "-"}</td>
+                            <td style={td}>{m.phone || "-"}</td>
+                            <td style={td}>{isLeader ? "Yes" : "No"}</td>
+                            {(isAdmin || isSanchalak) && (
+                              <td
+                                style={{
+                                  border: "1px solid #ddd",
+                                  padding: "10px",
+                                  textAlign: "center",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                <FaEdit
+                                  style={{ cursor: "pointer", marginRight: "12px" }}
+                                  size={18}
+                                  color="green"
+                                  title="Set as leader / edit member"
+                                  onClick={() => {
+                                    setEditMember({ ...m, teamId: team._id });
+                                  }}
+                                />
+                                {!isLeader && (
+                                  <button
+                                    onClick={() => handleSetLeader(team._id, m._id)}
+                                    style={{ padding: "6px 10px", cursor: "pointer" }}
+                                    title="Make Leader"
+                                  >
+                                    Make Leader
+                                  </button>
+                                )}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {showEditMember && <EditMandalYuvakModal modal={showEditMember} setModal={setShowEditMember} />}
+      {editMember && (
+        <EditMandalYuvakModal
+          modal={Boolean(editMember)}
+          setModal={() => setEditMember(null)}
+          user={editMember}
+          teams={teams}
+          onSuccess={() => {
+            setEditMember(null);
+            if (typeof refreshTeams === "function") refreshTeams();
+          }}
+        />
+      )}
     </>
   );
 }

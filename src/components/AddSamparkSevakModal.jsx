@@ -17,6 +17,8 @@ function AddSamparkSevakModal({ modal, setModal }) {
 
   const me = JSON.parse(localStorage.getItem("sevakDetails")) || {};
   const mySevakCode = me?.sevak_code || me?.sevak_id || "";
+  const myMandalId = me?.mandal_id || me?.mandalId || null;
+  const myTeamId = me?.team_id || me?.teamId || null;
 
   const [loader, setLoader] = useState(false);
   const [errors, setErrors] = useState({});
@@ -61,16 +63,21 @@ function AddSamparkSevakModal({ modal, setModal }) {
       const payload = {
         name: formData.name,
         phone: formData.phone,
-        mandal: formData.mandal,
-        target: formData.target,
-        sevak_id: mySevakCode,
+        role: "KARYAKAR",
+        mandalId: myMandalId || undefined,
+        teamId: myTeamId || undefined,
+        target: formData.target, // kept for future use
       };
-      alert("Work in progress: " + JSON.stringify(payload));
+      const res = await axios.post(`${BACKEND_ENDPOINT}users`, payload);
+      toast.success(`User created. ID: ${res.data?.userId}, Pass: ${res.data?.password}`);
+      setFormData({ name: "", phone: "", mandal: "", target: "" });
+      setErrors({});
+      toggle();
     } catch (error) {
-      toast.error("An error occurred: " + error.message);
+      const message = error?.response?.data?.message || error.message || "An error occurred";
+      toast.error(message);
     } finally {
       setLoader(false);
-      toggle();
     }
   };
 

@@ -3,7 +3,6 @@ import Header from '../components/Header'
 import { Button } from 'reactstrap';
 import { useNavigate } from 'react-router-dom';
 import AddSupervisorModal from '../components/AddSupervisorModal';
-import ListingTable from '../components/ListingTable';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import AddMemberModal from '../components/AddMemberModal';
 import { ProgressBar } from 'react-bootstrap';
