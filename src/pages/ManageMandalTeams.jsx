@@ -70,59 +70,6 @@ const ManageMandalTeams = () => {
                 </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px", margin: "20px 15px" }}>
-                <div
-                    style={{
-                        minHeight: "190px",
-                        borderRadius: "12px",
-                        padding: "16px",
-                        background: "linear-gradient(135deg, #f78ca0, #f9748f, #fd868c, #fe9a8b)",
-                        color: "#fff",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between",
-                        boxShadow: "0 6px 14px rgba(0,0,0,0.12)"
-                    }}
-                >
-                    <div style={{ textAlign: "center" }}>
-                        <h5 style={{ margin: 0 }}>Team &amp; Yuvak</h5>
-                        <p style={{ margin: "6px 0 0", opacity: 0.9 }}>Add yuvaks, create teams, assign yuvaks to teams.</p>
-                    </div>
-                    <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-                        <Button size="sm" color="light" onClick={() => setShowAddYuvak(true)} style={{ color: "#d93f3f", fontWeight: 600 }}>
-                            Add Yuvak
-                        </Button>
-                        <Button size="sm" color="light" onClick={handleTeamCreation} style={{ color: "#d93f3f", fontWeight: 600 }}>
-                            Create Team
-                        </Button>
-                    </div>
-                </div>
-
-                <div
-                    style={{
-                        minHeight: "190px",
-                        borderRadius: "12px",
-                        padding: "16px",
-                        background: "linear-gradient(135deg, #6dd5fa, #2980b9)",
-                        color: "#fff",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between",
-                        boxShadow: "0 6px 14px rgba(0,0,0,0.12)"
-                    }}
-                >
-                    <div style={{ textAlign: "center" }}>
-                        <h5 style={{ margin: 0 }}>Team Ahevaals</h5>
-                        <p style={{ margin: "6px 0 0", opacity: 0.9 }}>View ahevaals submitted by teams, grouped team-wise.</p>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                        <Button size="sm" color="light" onClick={() => navigate("/sampark-yuvak-team-wise")} style={{ color: "#1f4f86", fontWeight: 600 }}>
-                            View Team Ahevaals
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
             <SupervisorTeams teams={teams} loading={loading} error={error} refreshTeams={fetchTeams} />
 
             {showCreateTeam && (
