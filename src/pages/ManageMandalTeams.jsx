@@ -64,9 +64,9 @@ const ManageMandalTeams = () => {
                     <Button color="warning" onClick={handleTeamCreation}>
                         <span style={{ whiteSpace: "nowrap" }}>Create Team</span>
                     </Button>
-                    <Button color="primary" outline onClick={() => setShowAddYuvak(true)}>
+                    {/* <Button color="primary" outline onClick={() => setShowAddYuvak(true)}>
                         <span style={{ whiteSpace: "nowrap" }}>Add Yuvak</span>
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
 
