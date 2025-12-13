@@ -65,6 +65,7 @@ function EditMandalYuvakModal({ modal, setModal, user, teams = [], onSuccess }) 
         phone: formData.phone,
         teamId: formData.teamId || null,
       };
+      console.log("Updating yuvak with payload:", payload);
       await axios.patch(`${BACKEND_ENDPOINT}users/${user._id}`, payload);
       toast.success("Yuvak updated");
       if (onSuccess) onSuccess();

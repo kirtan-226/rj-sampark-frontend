@@ -6,9 +6,9 @@ import { toast, ToastContainer } from "react-toastify";
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import CircularProgress from "@mui/material/CircularProgress";
-import { Button } from "@mui/material";
+import { Button, InputLabel, MenuItem, Select } from "@mui/material";
 
-function AddMemberModal({ modal, setModal, onSuccess }) {
+function AddMemberBySanchalakModal({ modal, setModal, teams = [], onSuccess }) {
   const token = localStorage.getItem("authToken");
   if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
   axios.defaults.baseURL = BACKEND_ENDPOINT;
@@ -21,6 +21,7 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
     address: "",
     specialExp: "",
     dob: "",
+    teamId: "",
   });
   const toggle = () => setModal(!modal);
 
@@ -42,6 +43,10 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
       tempErrors.phone = "Phone number is required";
     } else if (!/^\d{10}$/.test(formData.phone)) {
       tempErrors.phone = "Phone must be exactly 10 digits";
+    }
+
+    if (!formData.teamId || formData.teamId.trim() === "") {
+      tempErrors.teamId = "Team is required";
     }
 
     if (!formData.dob) {
@@ -68,11 +73,13 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
         address: formData.address,
         specialExp: formData.specialExp,
         dob: formData.dob,
+        teamId: formData.teamId,
       };
+      console.log("Submitting ahevaal with payload:", payload);
       await axios.post(`${BACKEND_ENDPOINT}ahevaals`, payload);
       toast.success("Ahevaal submitted");
       if (onSuccess) onSuccess();
-      setFormData({ name: "", phone: "", address: "", specialExp: "", dob: "" });
+      setFormData({ name: "", phone: "", address: "", specialExp: "", dob: "", teamId: "" });
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Failed to submit";
       toast.error(msg);
@@ -130,20 +137,6 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
 
           <FormControl fullWidth variant="outlined" margin="normal">
             <TextField
-              name="dob"
-              type="date"
-              value={formData.dob}
-              onChange={handleChange}
-              variant="outlined"
-              color="secondary"
-              error={!!errors.dob}
-              helperText={errors.dob}
-              fullWidth
-            />
-          </FormControl>
-
-          <FormControl fullWidth variant="outlined" margin="normal">
-            <TextField
               label="Address (optional)"
               name="address"
               type="text"
@@ -166,6 +159,39 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
               color="secondary"
               fullWidth
             />
+          </FormControl>
+
+          <FormControl fullWidth variant="outlined" margin="normal">
+            <TextField
+              name="dob"
+              type="date"
+              value={formData.dob}
+              onChange={handleChange}
+              variant="outlined"
+              color="secondary"
+              error={!!errors.dob}
+              helperText={errors.dob}
+              fullWidth
+            />
+          </FormControl>
+
+          <FormControl fullWidth variant="outlined" margin="normal" size="small">
+            <InputLabel id="team-select-label">Team</InputLabel>
+            <Select
+              labelId="team-select-label"
+              label="Team"
+              name="teamId"
+              value={formData.teamId}
+              error={!!errors.teamId}
+              onChange={handleChange}
+            >
+              {/* <MenuItem value="">Not Assigned</MenuItem> */}
+              {teams.map((t) => (
+                <MenuItem key={t._id || t.teamCode} value={t._id}>
+                  {t.teamCode ? `${t.teamCode} - ${t.name}` : t.name}
+                </MenuItem>
+              ))}
+            </Select>
           </FormControl>
         </ModalBody>
 
@@ -195,4 +221,4 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
   );
 }
 
-export default AddMemberModal;
+export default AddMemberBySanchalakModal;

@@ -51,9 +51,10 @@ export default function SupervisorTeams({ teams = [], loading = false, error = "
 
   const handleSetLeader = async (teamId, memberId) => {
     try {
-      await axios.patch(`${BACKEND_ENDPOINT}teams/${teamId}`, {
+      const res = await axios.patch(`${BACKEND_ENDPOINT}teams/${teamId}`, {
         leader: memberId,
       });
+      console.log("Set leader response:", res.data);
       if (typeof refreshTeams === "function") refreshTeams();
     } catch (err) {
       alert(err?.response?.data?.message || err.message || "Failed to update leader");
@@ -142,7 +143,7 @@ export default function SupervisorTeams({ teams = [], loading = false, error = "
                       title="Delete team"
                     />
                   )}
-                  {openTeam === key ? "-" : "+"}
+                  {openTeam === key ? "▲" : "▼"}
                 </span>
               </div>
 
@@ -159,19 +160,26 @@ export default function SupervisorTeams({ teams = [], loading = false, error = "
                       <tr style={{ background: "#f5f5f5" }}>
                         <th style={th}>Name</th>
                         <th style={th}>Phone</th>
-                        <th style={th}>Leader?</th>
+                        <th style={th}>Leader</th>
                         {(isAdmin || isSanchalak) ? <th style={th}>Actions</th> : null}
                       </tr>
                     </thead>
 
                     <tbody>
                       {(team.members || []).map((m) => {
-                        const isLeader = team.leader && m._id && team.leader.toString() === m._id.toString();
+                        const memberId = typeof m === "string" ? m : m._id;
+                        const leaderId =
+                          typeof team.leader === "string" ? team.leader : team.leader?._id;
+
+                        const isLeader =
+                          leaderId && memberId && leaderId.toString() === memberId.toString();
+
                         return (
-                          <tr key={m._id || m.userId || m.name}>
-                            <td style={td}>{m.name || m.userId || "-"}</td>
-                            <td style={td}>{m.phone || "-"}</td>
+                          <tr key={memberId}>
+                            <td style={td}>{typeof m === "object" ? m.name : "-"}</td>
+                            <td style={td}>{typeof m === "object" ? m.phone : "-"}</td>
                             <td style={td}>{isLeader ? "Yes" : "No"}</td>
+
                             {(isAdmin || isSanchalak) && (
                               <td
                                 style={{
@@ -185,14 +193,15 @@ export default function SupervisorTeams({ teams = [], loading = false, error = "
                                   style={{ cursor: "pointer", marginRight: "12px" }}
                                   size={18}
                                   color="green"
-                                  title="Set as leader / edit member"
+                                  title="Edit member"
                                   onClick={() => {
-                                    setEditMember({ ...m, teamId: team._id });
+                                    setEditMember({ ...m, teamId: team._id, });
                                   }}
                                 />
+
                                 {!isLeader && (
                                   <button
-                                    onClick={() => handleSetLeader(team._id, m._id)}
+                                    onClick={() => handleSetLeader(team._id, memberId)}
                                     style={{ padding: "6px 10px", cursor: "pointer" }}
                                     title="Make Leader"
                                   >

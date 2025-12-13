@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import { BACKEND_ENDPOINT } from "../api/api";
 import axios from "axios";
@@ -10,7 +10,6 @@ import { Button, IconButton, Tooltip } from "@mui/material";
 import { FaPlus, FaTrash } from "react-icons/fa";
 
 function CreateTeamModal({ modal, setModal }) {
-
   const me = JSON.parse(localStorage.getItem("sevakDetails")) || {};
   const isSanchalak = (me.role || "").toUpperCase() === "SANCHALAK";
   const token = localStorage.getItem("authToken");
@@ -27,6 +26,8 @@ function CreateTeamModal({ modal, setModal }) {
   const [createdCreds, setCreatedCreds] = useState(null);
   const [availableMembers, setAvailableMembers] = useState([]);
   const toggle = () => setModal(!modal);
+  const usingExistingMembers = availableMembers.length > 0;
+  const PHONE_REGEX = /^[0-9]*$/;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,14 +93,37 @@ function CreateTeamModal({ modal, setModal }) {
     }
   }, [modal]);
 
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      members:
+        prev.members && prev.members.length
+          ? prev.members.map((m) =>
+              usingExistingMembers ? { memberId: m.memberId || "" } : { name: m.name || "", phone: m.phone || "" }
+            )
+          : [usingExistingMembers ? { memberId: "" } : { name: "", phone: "" }],
+    }));
+  }, [usingExistingMembers]);
+
   const handleMemberSelect = (index, memberId) => {
     const members = [...formData.members];
     members[index] = { memberId };
     setFormData((p) => ({ ...p, members }));
   };
 
+  const handleChange = (index, field, value) => {
+    if (field === "phone") {
+      if (!PHONE_REGEX.test(value)) return;
+      if (value.length > 10) return;
+    }
+    const members = [...formData.members];
+    members[index] = { ...members[index], [field]: value };
+    setFormData((p) => ({ ...p, members }));
+  };
+
   const addMemberRow = () => {
-    setFormData((p) => ({ ...p, members: [...p.members, { memberId: "" }] }));
+    const newRow = usingExistingMembers ? { memberId: "" } : { name: "", phone: "" };
+    setFormData((p) => ({ ...p, members: [...p.members, newRow] }));
   };
 
   const removeMemberRow = (idx) => {
@@ -108,19 +132,44 @@ function CreateTeamModal({ modal, setModal }) {
 
   const validateForm = () => {
     const errs = {};
-    if (!formData.name) errs.name = "Enter team name";
     const memberErrors = [];
-    const seen = new Set();
-    formData.members.forEach((m, i) => {
-      const errsForRow = {};
-      if (!m.memberId) errsForRow.memberId = "Select a member";
-      if (m.memberId && seen.has(m.memberId)) errsForRow.memberId = "Already selected";
-      if (m.memberId) seen.add(m.memberId);
-      if (Object.keys(errsForRow).length) memberErrors[i] = errsForRow;
-    });
-    if (memberErrors.length) errs.members = memberErrors;
-    if (formData.members.length === 0) errs.members = [{ memberId: "Add at least one member" }];
+    const teamName = (formData.name || suggestedName || "").trim();
+    if (!teamName) errs.name = "Enter team name";
 
+    if (!formData.members.length) {
+      errs.members = [{ memberId: "Add at least one member" }];
+      return errs;
+    }
+
+    if (usingExistingMembers) {
+      const seen = new Set();
+      formData.members.forEach((m, i) => {
+        const rowErr = {};
+        if (!m.memberId) rowErr.memberId = "Select a member";
+        if (m.memberId && seen.has(m.memberId)) rowErr.memberId = "Already selected";
+        if (m.memberId) seen.add(m.memberId);
+        if (Object.keys(rowErr).length) memberErrors[i] = rowErr;
+      });
+    } else {
+      const phoneSet = new Set();
+      formData.members.forEach((m, i) => {
+        const rowErr = {};
+        const name = (m.name || "").trim();
+        const phone = (m.phone || "").trim();
+        if (!name) rowErr.name = "Enter name";
+        if (!phone) rowErr.phone = "Enter phone";
+        else if (phone.length !== 10) rowErr.phone = "Phone must be exactly 10 digits";
+        if (phone) {
+          if (phoneSet.has(phone)) {
+            rowErr.phone = "Duplicate phone";
+          }
+          phoneSet.add(phone);
+        }
+        if (Object.keys(rowErr).length) memberErrors[i] = rowErr;
+      });
+    }
+
+    if (memberErrors.length) errs.members = memberErrors;
     return errs;
   };
 
@@ -144,16 +193,21 @@ function CreateTeamModal({ modal, setModal }) {
         return;
       }
 
-      const selectedExisting = formData.members
-        .map((m) => m.memberId)
-        .filter((id) => Boolean(id));
+      const selectedExisting = usingExistingMembers
+        ? formData.members.map((m) => m.memberId).filter(Boolean)
+        : [];
+      const newMembers = usingExistingMembers
+        ? []
+        : formData.members.map((m) => ({
+            name: (m.name || "").trim(),
+            phone: (m.phone || "").trim(),
+          }));
 
       const payload = {
         name: (formData.name || suggestedName || "").trim(),
         existingMemberIds: selectedExisting,
-        // keep alias to support older API versions that expect existingMembers
         existingMembers: selectedExisting,
-        members: [], // no new members created from modal; only attach existing
+        members: newMembers,
         mandalId,
       };
 
@@ -187,8 +241,9 @@ function CreateTeamModal({ modal, setModal }) {
         leaderCredential,
       });
       toast.success("Team created");
-      // reset form for next use
-      setFormData({ name: "", members: [{ memberId: "" }] });
+
+      const defaultRow = usingExistingMembers ? { memberId: "" } : { name: "", phone: "" };
+      setFormData({ name: isSanchalak ? suggestedName : "", members: [defaultRow] });
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Failed to create team";
       toast.error(msg);
@@ -229,45 +284,76 @@ function CreateTeamModal({ modal, setModal }) {
             </Tooltip>
           </div>
 
-          {formData.members.map((m, idx) => {
-            const selected = availableMembers.find((a) => a._id === m.memberId);
-            return (
-              <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
-                <TextField
-                  select
-                  label="Select member"
-                  value={m.memberId}
-                  onChange={(e) => handleMemberSelect(idx, e.target.value)}
-                  error={Boolean(errors.members?.[idx]?.memberId)}
-                  helperText={errors.members?.[idx]?.memberId}
-                  fullWidth
-                  SelectProps={{ native: true }}
-                >
-                  <option value="">-- choose unassigned member --</option>
-                  {availableMembers.map((member) => (
-                    <option key={member._id} value={member._id}>
-                      {member.name} ({member.phone})
-                    </option>
-                  ))}
-                </TextField>
-                {selected && (
-                  <div style={{ minWidth: "140px", fontSize: "0.85rem", color: "#555" }}>
-                    <div>{selected.userId}</div>
-                  </div>
-                )}
-                {formData.members.length > 1 && (
-                  <IconButton color="error" onClick={() => removeMemberRow(idx)}>
-                    <FaTrash />
-                  </IconButton>
-                )}
+          {usingExistingMembers ? (
+            formData.members.map((m, idx) => {
+              const selected = availableMembers.find((a) => a._id === m.memberId);
+              return (
+                <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
+                  <TextField
+                    select
+                    label="Select member"
+                    value={m.memberId}
+                    onChange={(e) => handleMemberSelect(idx, e.target.value)}
+                    error={Boolean(errors.members?.[idx]?.memberId)}
+                    helperText={errors.members?.[idx]?.memberId}
+                    fullWidth
+                    SelectProps={{ native: true }}
+                  >
+                    <option value="">-- choose unassigned member --</option>
+                    {availableMembers.map((member) => (
+                      <option key={member._id} value={member._id}>
+                        {member.name} ({member.phone})
+                      </option>
+                    ))}
+                  </TextField>
+                  {selected && (
+                    <div style={{ minWidth: "140px", fontSize: "0.85rem", color: "#555" }}>
+                      <div>{selected.userId}</div>
+                    </div>
+                  )}
+                  {formData.members.length > 1 && (
+                    <IconButton color="error" onClick={() => removeMemberRow(idx)}>
+                      <FaTrash />
+                    </IconButton>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <>
+              <div style={{ fontSize: "0.9rem", color: "#777", marginBottom: "8px" }}>
+                No unassigned members found for this mandal.
               </div>
-            );
-          })}
-
-          {!availableMembers.length && (
-            <div style={{ fontSize: "0.9rem", color: "#777", marginBottom: "8px" }}>
-              No unassigned members found for this mandal.
-            </div>
+              {formData.members.map((m, idx) => (
+                <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
+                  <TextField
+                    label="Name"
+                    value={m.name || ""}
+                    onChange={(e) => handleChange(idx, "name", e.target.value)}
+                    error={Boolean(errors.members?.[idx]?.name)}
+                    helperText={errors.members?.[idx]?.name}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Phone"
+                    value={m.phone || ""}
+                    onChange={(e) => handleChange(idx, "phone", e.target.value)}
+                    error={Boolean(errors.members?.[idx]?.phone)}
+                    helperText={
+                      errors.members?.[idx]?.phone ||
+                      (m.phone && m.phone.length !== 10 ? "Phone must be exactly 10 digits" : "")
+                    }
+                    inputProps={{ inputMode: "numeric", pattern: "[0-9]{10}", maxLength: 10 }}
+                    fullWidth
+                  />
+                  {formData.members.length > 1 && (
+                    <IconButton color="error" onClick={() => removeMemberRow(idx)}>
+                      <FaTrash />
+                    </IconButton>
+                  )}
+                </div>
+              ))}
+            </>
           )}
 
           {createdCreds && (
@@ -287,7 +373,6 @@ function CreateTeamModal({ modal, setModal }) {
               </div>
             </div>
           )}
-
         </ModalBody>
 
         <ModalFooter>
@@ -311,7 +396,7 @@ function CreateTeamModal({ modal, setModal }) {
         </ModalFooter>
       </Modal>
 
-      {/* keep if you don’t already have a global container */}
+      {/* keep if you don't already have a global container */}
       <ToastContainer position="top-center" autoClose={5000} pauseOnHover theme="colored" />
     </div>
   );

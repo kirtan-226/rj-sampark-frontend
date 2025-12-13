@@ -37,6 +37,7 @@ const TeamHome = () => {
     setError("");
     try {
       const res = await axios.get(`${BACKEND_ENDPOINT}ahevaals/my`);
+      console.log("Fetched ahevaals:", res.data);
       setAhevaals(res.data || []);
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Failed to load data");
@@ -46,12 +47,24 @@ const TeamHome = () => {
     }
   };
 
+  const filteredAhevaals = React.useMemo(() => {
+    const q = qMandal.trim().toLowerCase();
+    if (!q) return ahevaals;
+
+    return ahevaals.filter((item) =>
+      item.name?.toLowerCase().includes(q) ||
+      item.phone?.includes(q) ||
+      item.address?.toLowerCase().includes(q)
+    );
+  }, [ahevaals, qMandal]);
+
   return (
     <>
       <Header />
 
       <Chip
         label={teamName}
+        label={sevakDetails?.role || "Team A"}
         sx={{
           fontSize: "1.2rem",
           padding: "16px 28px",
@@ -94,17 +107,21 @@ const TeamHome = () => {
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>#</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Phone</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>DOB</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Address</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Special Experience</th>
                 </tr>
               </thead>
 
               <tbody>
-                {ahevaals.map((item, idx) => (
+                {filteredAhevaals.map((item, idx) => (
                   <tr key={item._id || idx}>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{idx + 1}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.name}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.phone}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.dob || "-"}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.address || "-"}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.specialExp || "-"}</td>
                   </tr>
                 ))}
               </tbody>

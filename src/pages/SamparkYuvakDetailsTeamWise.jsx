@@ -2,12 +2,16 @@ import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import axios from "axios";
 import { BACKEND_ENDPOINT } from "../api/api";
+import AddMemberModal from "../components/AddMemberModal";
+import { Button } from "reactstrap";
+import AddMemberBySanchalakModal from "../components/AddMemberBySanchalakModal";
 
 export default function SamparkYuvakDetailsTeamWise() {
   const [openTeam, setOpenTeam] = useState(null);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showAddSamparkDetails, setShowAddSamparkDetails] = useState(false);
 
   const sevakDetails = (() => {
     try {
@@ -63,6 +67,8 @@ export default function SamparkYuvakDetailsTeamWise() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleAddSamparkDetails = () => setShowAddSamparkDetails(true);
+
   return (
     <>
       <Header />
@@ -76,8 +82,11 @@ export default function SamparkYuvakDetailsTeamWise() {
         }}
       >
         <h5 style={{ margin: 0, whiteSpace: "nowrap", marginLeft: "10px" }}>
-          Sampark Yuvak Details
+          Sampark Details
         </h5>
+        <Button color="warning" onClick={handleAddSamparkDetails}>
+          <span style={{ whiteSpace: "nowrap" }}>Add Sampark Details</span>
+        </Button>
       </div>
 
       <div style={{ width: "90%", margin: "auto", marginTop: "30px" }}>
@@ -128,9 +137,9 @@ export default function SamparkYuvakDetailsTeamWise() {
                           <th style={th}>#</th>
                           <th style={th}>Name</th>
                           <th style={th}>Phone</th>
+                          <th style={th}>DOB</th>
                           <th style={th}>Address</th>
-                          <th style={th}>Start</th>
-                          <th style={th}>End</th>
+                          <th style={th}>Special Experience</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -139,13 +148,9 @@ export default function SamparkYuvakDetailsTeamWise() {
                             <td style={td}>{idx + 1}</td>
                             <td style={td}>{a.name || "-"}</td>
                             <td style={td}>{a.phone || "-"}</td>
+                            <td style={td}>{a.dob || "-"}</td>
                             <td style={td}>{a.address || "-"}</td>
-                            <td style={td}>
-                              {a.startTime ? new Date(a.startTime).toLocaleString() : "-"}
-                            </td>
-                            <td style={td}>
-                              {a.endTime ? new Date(a.endTime).toLocaleString() : "-"}
-                            </td>
+                            <td style={td}>{a.specialExp || "-"}</td>
                           </tr>
                         ))}
                         {(team.ahevaals || []).length === 0 && (
@@ -163,6 +168,15 @@ export default function SamparkYuvakDetailsTeamWise() {
             );
           })}
       </div>
+
+      {showAddSamparkDetails && (
+        <AddMemberBySanchalakModal
+          modal={showAddSamparkDetails}
+          setModal={setShowAddSamparkDetails}
+          teams={teams}
+          onSuccess={fetchTeamsWithAhevaals}
+        />
+      )}
     </>
   );
 }
