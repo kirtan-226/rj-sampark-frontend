@@ -134,6 +134,7 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
           <FormControl fullWidth variant="outlined" margin="normal">
             <TextField
               name="dob"
+              label="dd-mm-yyyy (DOB)"
               type="date"
               value={formData.dob}
               onChange={handleChange}

@@ -329,7 +329,7 @@ function CreateTeamModal({ modal, setModal }) {
                 <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
                   <TextField
                     select
-                    label="Select member"
+                    // label="Select member"
                     value={m.memberId}
                     onChange={(e) => handleMemberSelect(idx, e.target.value)}
                     error={Boolean(errors.members?.[idx]?.memberId)}
@@ -337,7 +337,7 @@ function CreateTeamModal({ modal, setModal }) {
                     fullWidth
                     SelectProps={{ native: true }}
                   >
-                    <option value="">-- choose unassigned member --</option>
+                    <option value="">-- Choose unassigned member --</option>
                     {availableMembers.map((member) => (
                       <option key={member._id} value={member._id}>
                         {member.name} ({member.phone})

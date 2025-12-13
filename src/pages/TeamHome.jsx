@@ -59,25 +59,15 @@ const TeamHome = () => {
     <>
       <Header />
 
-      <Box display="flex" flexWrap="wrap" gap={1.5} mx={1.5} my={2.5}>
-        <Chip
-          label={teamName}
-          sx={{
-            fontSize: "1.2rem",
-            padding: "16px 28px",
-            height: "45px",
-          }}
-        />
-        <Chip
-          label={roleLabel}
-          color="primary"
-          sx={{
-            fontSize: "1.2rem",
-            padding: "16px 28px",
-            height: "45px",
-          }}
-        />
-      </Box>
+      <Chip
+        label={`${teamName} : ${roleLabel}`}
+        sx={{
+          fontSize: "1.2rem",
+          padding: "8px 15px",
+          height: "45px",
+          margin: "10px 58px",
+        }}
+      />
 
       <div>
         <div style={{
@@ -126,7 +116,7 @@ const TeamHome = () => {
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{idx + 1}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.name}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.phone}</td>
-                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.dob || "-"}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.dob.toString().substring(0, 10).split("-").reverse().join("-") || "-"}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.address || "-"}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.grade || "-"}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.specialExp || "-"}</td>
