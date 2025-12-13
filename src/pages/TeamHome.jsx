@@ -1,9 +1,6 @@
-import React, { useEffect, useState } from 'react'
+﻿import React, { useEffect, useState } from 'react'
 import Header from '../components/Header'
 import { Button } from 'reactstrap';
-import { useNavigate } from 'react-router-dom';
-import AddSupervisorModal from '../components/AddSupervisorModal';
-import { FaEdit, FaTrash } from 'react-icons/fa';
 import AddMemberModal from '../components/AddMemberModal';
 import { Box, Chip, TextField } from '@mui/material';
 import axios from 'axios';
@@ -11,7 +8,6 @@ import { BACKEND_ENDPOINT } from '../api/api';
 
 const TeamHome = () => {
 
-  const navigate = useNavigate();
   const [showAddSupervisor, setShowAddSupervisor] = useState(false);
   const [qMandal, setQMandal] = useState("");
   const [ahevaals, setAhevaals] = useState([]);
@@ -24,6 +20,7 @@ const TeamHome = () => {
   const sevak_target = me.sevak_target ?? 45;
   const achievedTarget = me.achieved_target ?? 0;
   const teamName = me.team_name || me.team_code || me.teamCode || me.team_id || "Team";
+  const roleLabel = me.role || me.team_role || me.designation || "Team A";
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -62,16 +59,25 @@ const TeamHome = () => {
     <>
       <Header />
 
-      <Chip
-        label={teamName}
-        label={sevakDetails?.role || "Team A"}
-        sx={{
-          fontSize: "1.2rem",
-          padding: "16px 28px",
-          height: "45px",
-          margin: "20px 12px",
-        }}
-      />
+      <Box display="flex" flexWrap="wrap" gap={1.5} mx={1.5} my={2.5}>
+        <Chip
+          label={teamName}
+          sx={{
+            fontSize: "1.2rem",
+            padding: "16px 28px",
+            height: "45px",
+          }}
+        />
+        <Chip
+          label={roleLabel}
+          color="primary"
+          sx={{
+            fontSize: "1.2rem",
+            padding: "16px 28px",
+            height: "45px",
+          }}
+        />
+      </Box>
 
       <div>
         <div style={{
