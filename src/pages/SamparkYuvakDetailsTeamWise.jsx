@@ -148,7 +148,7 @@ export default function SamparkYuvakDetailsTeamWise() {
                             <td style={td}>{idx + 1}</td>
                             <td style={td}>{a.name || "-"}</td>
                             <td style={td}>{a.phone || "-"}</td>
-                            <td style={td}>{a.dob || "-"}</td>
+                            <td style={td}>{a.dob.toString().substring(0, 10).split("-").reverse().join("-") || "-"}</td>
                             <td style={td}>{a.address || "-"}</td>
                             <td style={td}>{a.specialExp || "-"}</td>
                           </tr>
