@@ -14,32 +14,32 @@ const SanchalakHome = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const sevakDetails = JSON.parse(localStorage.getItem("sevakDetails") || "{}");
+  const mandalId = sevakDetails?.mandal_id || sevakDetails?.mandalId;
+  const token = localStorage.getItem("authToken");
+  if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
+  axios.defaults.baseURL = BACKEND_ENDPOINT;
+
+  const fetchTeams = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios.get(`${BACKEND_ENDPOINT}teams/mandal/${mandalId}`);
+      setTeams(res.data || []);
+    } catch (err) {
+      setTeams([]);
+      setError(err.response?.data?.message || err.message || "Failed to load teams");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const sevakDetails = JSON.parse(localStorage.getItem("sevakDetails") || "{}");
-    const mandalId = sevakDetails?.mandal_id || sevakDetails?.mandalId;
-    const token = localStorage.getItem("authToken");
-    if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
-    axios.defaults.baseURL = BACKEND_ENDPOINT;
 
     if (!mandalId) {
       setError("Mandal not set for this sanchalak");
       return;
     }
-
-    const fetchTeams = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await axios.get(`${BACKEND_ENDPOINT}teams/mandal/${mandalId}`);
-        setTeams(res.data || []);
-      } catch (err) {
-        setTeams([]);
-        setError(err.response?.data?.message || err.message || "Failed to load teams");
-      } finally {
-        setLoading(false);
-      }
-    };
 
     fetchTeams();
   }, []);
@@ -143,7 +143,7 @@ const SanchalakHome = () => {
         </div>
 
         <div style={{ padding: "0 15px 20px" }}>
-          <SupervisorTeams teams={teams} loading={loading} error={error} />
+          <SupervisorTeams teams={teams} loading={loading} error={error} refreshTeams={fetchTeams} />
         </div>
       </div>
 

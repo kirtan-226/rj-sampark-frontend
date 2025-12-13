@@ -38,6 +38,7 @@ const TeamHome = () => {
     setError("");
     try {
       const res = await axios.get(`${BACKEND_ENDPOINT}ahevaals/my`);
+      console.log("Fetched ahevaals:", res.data);
       setAhevaals(res.data || []);
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Failed to load data");
@@ -47,11 +48,22 @@ const TeamHome = () => {
     }
   };
 
+  const filteredAhevaals = React.useMemo(() => {
+    const q = qMandal.trim().toLowerCase();
+    if (!q) return ahevaals;
+
+    return ahevaals.filter((item) =>
+      item.name?.toLowerCase().includes(q) ||
+      item.phone?.includes(q) ||
+      item.address?.toLowerCase().includes(q)
+    );
+  }, [ahevaals, qMandal]);
+
   return (
     <>
       <Header />
 
-      <div
+      {/* <div
         style={{
           display: "flex",
           textAlign: "left",
@@ -82,9 +94,9 @@ const TeamHome = () => {
           <h6>Target : {sevak_target}</h6>
           <h6>Filled form : {achievedTarget}</h6>
         </div>
-      </div>
+      </div> */}
 
-      <Chip
+      {/* <Chip
         label="Team A"
         sx={{
           fontSize: "1.2rem",
@@ -92,7 +104,7 @@ const TeamHome = () => {
           height: "45px",
           margin: "20px 12px",
         }}
-      />
+      /> */}
 
       <div>
         <div style={{
@@ -133,7 +145,7 @@ const TeamHome = () => {
               </thead>
 
               <tbody>
-                {ahevaals.map((item, idx) => (
+                {filteredAhevaals.map((item, idx) => (
                   <tr key={item._id || idx}>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{idx + 1}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.name}</td>

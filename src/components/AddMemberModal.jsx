@@ -29,10 +29,20 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
   };
 
   const validateForm = () => {
-    const errs = {};
-    if (!formData.name) errs.name = "Enter Name";
-    if (!formData.phone) errs.phone = "Enter Phone No";
-    return errs;
+    const tempErrors = {};
+    if (!formData.name.trim()) {
+      tempErrors.name = "Name is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
+      tempErrors.name = "Only characters allowed";
+    }
+
+    // Phone validation
+    if (!formData.phone) {
+      tempErrors.phone = "Phone number is required";
+    } else if (!/^\d{10}$/.test(formData.phone)) {
+      tempErrors.phone = "Phone must be exactly 10 digits";
+    }
+    return tempErrors;
   };
 
   const handleSubmit = async (e) => {
@@ -77,7 +87,12 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
               name="name"
               type="text"
               value={formData.name}
-              onChange={handleChange}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^[a-zA-Z\s]*$/.test(value)) {
+                  setFormData({ ...formData, name: value });
+                }
+              }}
               variant="outlined"
               color="secondary"
               error={!!errors.name}
@@ -92,7 +107,12 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
               name="phone"
               type="tel"
               value={formData.phone || ""}
-              onChange={handleChange}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ""); // digits only
+                if (value.length <= 10) {
+                  setFormData({ ...formData, phone: value });
+                }
+              }}
               variant="outlined"
               color="secondary"
               error={Boolean(errors.phone)}
