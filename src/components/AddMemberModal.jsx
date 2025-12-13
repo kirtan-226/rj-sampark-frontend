@@ -4,6 +4,7 @@ import { BACKEND_ENDPOINT } from "../api/api";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import CircularProgress from "@mui/material/CircularProgress";
 import { Button } from "@mui/material";
@@ -21,6 +22,7 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
     address: "",
     specialExp: "",
     dob: "",
+    grade: "A",
   });
   const toggle = () => setModal(!modal);
 
@@ -68,11 +70,12 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
         address: formData.address,
         specialExp: formData.specialExp,
         dob: formData.dob,
+        grade: formData.grade,
       };
       await axios.post(`${BACKEND_ENDPOINT}ahevaals`, payload);
       toast.success("Ahevaal submitted");
       if (onSuccess) onSuccess();
-      setFormData({ name: "", phone: "", address: "", specialExp: "", dob: "" });
+      setFormData({ name: "", phone: "", address: "", specialExp: "", dob: "", grade: "A" });
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Failed to submit";
       toast.error(msg);
@@ -140,6 +143,25 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
               helperText={errors.dob}
               fullWidth
             />
+          </FormControl>
+
+          <FormControl fullWidth variant="outlined" margin="normal">
+            <TextField
+              select
+              label="Sampark Grade"
+              name="grade"
+              value={formData.grade}
+              onChange={handleChange}
+              variant="outlined"
+              color="secondary"
+              fullWidth
+            >
+              {["A", "B", "C"].map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </TextField>
           </FormControl>
 
           <FormControl fullWidth variant="outlined" margin="normal">

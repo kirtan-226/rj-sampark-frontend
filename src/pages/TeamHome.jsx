@@ -115,6 +115,7 @@ const TeamHome = () => {
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Phone</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>DOB</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Address</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Sampark Grade</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Special Experience</th>
                 </tr>
               </thead>
@@ -127,6 +128,7 @@ const TeamHome = () => {
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.phone}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.dob || "-"}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.address || "-"}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.grade || "-"}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.specialExp || "-"}</td>
                   </tr>
                 ))}

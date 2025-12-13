@@ -16,11 +16,17 @@ function CreateTeamModal({ modal, setModal }) {
   if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
   axios.defaults.baseURL = BACKEND_ENDPOINT;
 
+  const REQUIRED_MEMBER_COUNT = 4;
+  const buildEmptyRow = (useExisting) =>
+    useExisting ? { memberId: "" } : { name: "", phone: "" };
+  const buildEmptyMembers = (useExisting) =>
+    Array.from({ length: REQUIRED_MEMBER_COUNT }, () => ({ ...buildEmptyRow(useExisting) }));
+
   const [loader, setLoader] = useState(false);
   const [suggestedName, setSuggestedName] = useState("");
   const [formData, setFormData] = useState({
     name: "",
-    members: [{ memberId: "" }],
+    members: buildEmptyMembers(false),
   });
   const [errors, setErrors] = useState({});
   const [createdCreds, setCreatedCreds] = useState(null);
@@ -93,15 +99,19 @@ function CreateTeamModal({ modal, setModal }) {
     }
   }, [modal]);
 
+  const normalizeMembers = (members, useExisting) => {
+    const normalized = (members || []).map((m) =>
+      useExisting ? { memberId: m.memberId || "" } : { name: m.name || "", phone: m.phone || "" }
+    );
+    const trimmed = normalized.slice(0, REQUIRED_MEMBER_COUNT);
+    while (trimmed.length < REQUIRED_MEMBER_COUNT) trimmed.push({ ...buildEmptyRow(useExisting) });
+    return trimmed;
+  };
+
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
-      members:
-        prev.members && prev.members.length
-          ? prev.members.map((m) =>
-              usingExistingMembers ? { memberId: m.memberId || "" } : { name: m.name || "", phone: m.phone || "" }
-            )
-          : [usingExistingMembers ? { memberId: "" } : { name: "", phone: "" }],
+      members: normalizeMembers(prev.members, usingExistingMembers),
     }));
   }, [usingExistingMembers]);
 
@@ -122,8 +132,15 @@ function CreateTeamModal({ modal, setModal }) {
   };
 
   const addMemberRow = () => {
+    if (formData.members.length >= REQUIRED_MEMBER_COUNT) {
+      setErrors((p) => ({
+        ...p,
+        memberCount: `Team must have exactly ${REQUIRED_MEMBER_COUNT} members`,
+      }));
+      return;
+    }
     const newRow = usingExistingMembers ? { memberId: "" } : { name: "", phone: "" };
-    setFormData((p) => ({ ...p, members: [...p.members, newRow] }));
+    setFormData((p) => ({ ...p, members: [...p.members, { ...newRow }] }));
   };
 
   const removeMemberRow = (idx) => {
@@ -135,6 +152,10 @@ function CreateTeamModal({ modal, setModal }) {
     const memberErrors = [];
     const teamName = (formData.name || suggestedName || "").trim();
     if (!teamName) errs.name = "Enter team name";
+
+    if (formData.members.length !== REQUIRED_MEMBER_COUNT) {
+      errs.memberCount = `Team must have exactly ${REQUIRED_MEMBER_COUNT} members`;
+    }
 
     if (!formData.members.length) {
       errs.members = [{ memberId: "Add at least one member" }];
@@ -242,8 +263,10 @@ function CreateTeamModal({ modal, setModal }) {
       });
       toast.success("Team created");
 
-      const defaultRow = usingExistingMembers ? { memberId: "" } : { name: "", phone: "" };
-      setFormData({ name: isSanchalak ? suggestedName : "", members: [defaultRow] });
+      setFormData({
+        name: isSanchalak ? suggestedName : "",
+        members: buildEmptyMembers(usingExistingMembers),
+      });
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Failed to create team";
       toast.error(msg);
@@ -276,11 +299,26 @@ function CreateTeamModal({ modal, setModal }) {
           </FormControl>
 
           <div style={{ marginTop: "10px", marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h6 style={{ margin: 0 }}>Members (name & phone)</h6>
-            <Tooltip title="Add member">
-              <IconButton size="small" color="primary" onClick={addMemberRow}>
-                <FaPlus />
-              </IconButton>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <h6 style={{ margin: 0 }}>Members (name & phone)</h6>
+              <div style={{ fontSize: "0.85rem", color: "#666" }}>
+                {formData.members.length}/{REQUIRED_MEMBER_COUNT} required
+              </div>
+              {errors.memberCount && (
+                <div style={{ color: "red", fontSize: "0.85rem" }}>{errors.memberCount}</div>
+              )}
+            </div>
+            <Tooltip title={formData.members.length >= REQUIRED_MEMBER_COUNT ? "Exactly 4 members are required" : "Add member"}>
+              <span>
+                <IconButton
+                  size="small"
+                  color="primary"
+                  onClick={addMemberRow}
+                  disabled={formData.members.length >= REQUIRED_MEMBER_COUNT}
+                >
+                  <FaPlus />
+                </IconButton>
+              </span>
             </Tooltip>
           </div>
 
