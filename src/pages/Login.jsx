@@ -46,6 +46,8 @@ const Login = () => {
         phone_number: user.phone,
         mandal_id: user.mandalId,
         team_id: user.teamId,
+        team_name: user.teamName || user.teamCode || null,
+        team_code: user.teamCode || null,
         role_code: user.role,
         sevak_target: user.sevak_target ?? 0,
         filled_form: user.filled_form ?? 0,

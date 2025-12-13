@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import AddSupervisorModal from '../components/AddSupervisorModal';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import AddMemberModal from '../components/AddMemberModal';
-import { ProgressBar } from 'react-bootstrap';
 import { Box, Chip, TextField } from '@mui/material';
 import axios from 'axios';
 import { BACKEND_ENDPOINT } from '../api/api';
@@ -18,13 +17,13 @@ const TeamHome = () => {
   const [ahevaals, setAhevaals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const me = JSON.parse(localStorage.getItem("sevakDetails") || "{}");
 
   const handleAddSupervisor = () => setShowAddSupervisor(true);
 
-  let sevak_target = 45;
-  let achievedTarget = 2;
-  const progress = sevak_target > 0 ? (achievedTarget / sevak_target) * 100 : 0;
-  const progressClamped = Math.max(0, Math.min(100, Math.round(progress)));
+  const sevak_target = me.sevak_target ?? 45;
+  const achievedTarget = me.achieved_target ?? 0;
+  const teamName = me.team_name || me.team_code || me.teamCode || me.team_id || "Team";
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -51,41 +50,8 @@ const TeamHome = () => {
     <>
       <Header />
 
-      <div
-        style={{
-          display: "flex",
-          textAlign: "left",
-          fontFamily: "system-ui",
-          justifyContent: "space-around",
-        }}
-      >
-        <div style={{ width: "100%", padding: "10px", fontWeight: 600 }}>
-          <h6 style={{ fontWeight: 600 }}>Achieved Target</h6>
-          <ProgressBar
-            now={progressClamped}
-            label={`${progressClamped}%`}
-            className="custom-progress-bar"
-          />
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          textAlign: "left",
-          fontFamily: "system-ui",
-          margin: "0 12px",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>
-          <h6>Target : {sevak_target}</h6>
-          <h6>Filled form : {achievedTarget}</h6>
-        </div>
-      </div>
-
       <Chip
-        label="Team A"
+        label={teamName}
         sx={{
           fontSize: "1.2rem",
           padding: "16px 28px",
