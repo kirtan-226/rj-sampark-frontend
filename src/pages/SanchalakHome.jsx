@@ -48,20 +48,20 @@ const SanchalakHome = () => {
     <>
       <Header />
       <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
-        {/* <div
+        <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "center",
             alignItems: "center",
             paddingTop: "20px",
             marginInline: "15px",
           }}
         >
-          <h5 style={{ margin: 0, whiteSpace: "nowrap" }}>Manage Teams</h5>
-          <Button color="primary" onClick={() => setShowCreateTeam(true)}>
+          <h5 style={{ margin: 0, whiteSpace: "nowrap" }}>{sevakDetails?.role || "Manage Teams"}</h5>
+          {/* <Button color="primary" onClick={() => setShowCreateTeam(true)}>
             Create Team
-          </Button>
-        </div> */}
+          </Button> */}
+        </div>
 
         <div style={{ padding: "20px 15px" }}>
           <Grid container spacing={2}>

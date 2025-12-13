@@ -128,8 +128,10 @@ const ManageMandalYuvaks = () => {
                         <thead>
                             <tr style={{ backgroundColor: "#f2f2f2" }}>
                                 <th style={{ border: "1px solid #ddd", padding: "10px" }}>ID</th>
+                                <th style={{ border: "1px solid #ddd", padding: "10px" }}>Password</th>
                                 <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name</th>
                                 <th style={{ border: "1px solid #ddd", padding: "10px" }}>Phone</th>
+                                <th style={{ border: "1px solid #ddd", padding: "10px" }}>Role</th>
                                 <th style={{ border: "1px solid #ddd", padding: "10px" }}>Team</th>
                                 <th style={{ border: "1px solid #ddd", padding: "10px" }}>Actions</th>
                             </tr>
@@ -153,8 +155,10 @@ const ManageMandalYuvaks = () => {
                             {!loading && filtered.map((item) => (
                                 <tr key={item._id || item.userId}>
                                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.userId || "-"}</td>
+                                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.password || "-"}</td>
                                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.name}</td>
                                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.phone}</td>
+                                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.role || "-"}</td>
                                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>
                                         {item.teamId?.name || item.teamId?.teamCode || "Not Assigned"}
                                     </td>

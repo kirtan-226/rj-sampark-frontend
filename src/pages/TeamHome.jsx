@@ -25,6 +25,7 @@ const TeamHome = () => {
   let achievedTarget = 2;
   const progress = sevak_target > 0 ? (achievedTarget / sevak_target) * 100 : 0;
   const progressClamped = Math.max(0, Math.min(100, Math.round(progress)));
+  const sevakDetails = JSON.parse(localStorage.getItem("sevakDetails") || "{}");
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -96,15 +97,15 @@ const TeamHome = () => {
         </div>
       </div> */}
 
-      {/* <Chip
-        label="Team A"
+      <Chip
+        label={sevakDetails?.role || "Team A"}
         sx={{
           fontSize: "1.2rem",
           padding: "16px 28px",
           height: "45px",
           margin: "20px 12px",
         }}
-      /> */}
+      />
 
       <div>
         <div style={{
@@ -140,7 +141,9 @@ const TeamHome = () => {
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>#</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Phone</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>DOB</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Address</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Special Experience</th>
                 </tr>
               </thead>
 
@@ -150,7 +153,9 @@ const TeamHome = () => {
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{idx + 1}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.name}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.phone}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.dob || "-"}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.address || "-"}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.specialExp || "-"}</td>
                   </tr>
                 ))}
               </tbody>

@@ -26,10 +26,14 @@ function CreateTeamModal({ modal, setModal }) {
   const toggle = () => setModal(!modal);
 
   const PHONE_REGEX = /^[0-9]*$/;
-  const handleChange = (index, field, value) => {
-    if (!PHONE_REGEX.test(value)) return;
 
-    if (value.length > 10) return;
+  const handleChange = (index, field, value) => {
+
+    if (field === "phone") {
+      if (!PHONE_REGEX.test(value)) return;
+      if (value.length > 10) return;
+    }
+
     const members = [...formData.members];
     members[index] = { ...members[index], [field]: value };
     setFormData((p) => ({ ...p, members }));
