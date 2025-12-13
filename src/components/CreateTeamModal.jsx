@@ -25,7 +25,11 @@ function CreateTeamModal({ modal, setModal }) {
   const [createdCreds, setCreatedCreds] = useState(null);
   const toggle = () => setModal(!modal);
 
+  const PHONE_REGEX = /^[0-9]*$/;
   const handleChange = (index, field, value) => {
+    if (!PHONE_REGEX.test(value)) return;
+
+    if (value.length > 10) return;
     const members = [...formData.members];
     members[index] = { ...members[index], [field]: value };
     setFormData((p) => ({ ...p, members }));
@@ -140,7 +144,10 @@ function CreateTeamModal({ modal, setModal }) {
                 value={m.phone}
                 onChange={(e) => handleChange(idx, "phone", e.target.value)}
                 error={Boolean(errors.members?.[idx]?.phone)}
-                helperText={errors.members?.[idx]?.phone}
+                helperText={
+                  errors.members?.[idx]?.phone ||
+                  (m.phone && m.phone.length !== 10 ? "Phone must be exactly 10 digits" : "")
+                }
                 inputProps={{ inputMode: "numeric", pattern: "[0-9]{10}", maxLength: 10 }}
                 fullWidth
               />

@@ -143,7 +143,7 @@ export default function SupervisorTeams({ teams = [], loading = false, error = "
                       title="Delete team"
                     />
                   )}
-                  {openTeam === key ? "-" : "+"}
+                  {openTeam === key ? "▲" : "▼"}
                 </span>
               </div>
 
