@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { Button } from 'reactstrap';
@@ -53,13 +53,24 @@ const ManageMandalYuvaks = () => {
         try {
             setLoading(true);
             setError("");
-            const res = await axios.get(`${BACKEND_ENDPOINT}users`, {
-                params: {
-                    role: "KARYAKAR",
-                    mandalId: mandalId || undefined,
-                }
+            const params = { mandalId: mandalId || undefined };
+            const [karyakarRes, sanchalakRes] = await Promise.all([
+                axios.get(`${BACKEND_ENDPOINT}users`, { params: { ...params, role: "KARYAKAR" } }),
+                axios.get(`${BACKEND_ENDPOINT}users`, { params: { ...params, role: "SANCHALAK" } }),
+            ]);
+
+            const combined = [...(karyakarRes.data || []), ...(sanchalakRes.data || [])];
+            const seen = new Set();
+            const unique = combined.filter((u) => {
+                const id = u?._id || u?.id || u?.userId;
+                if (!id) return true;
+                const key = String(id);
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
             });
-            setRows(Array.isArray(res.data) ? res.data : []);
+
+            setRows(unique);
         } catch (err) {
             const message = err?.response?.data?.message || err.message || "Failed to load yuvaks";
             setError(message);
@@ -89,15 +100,56 @@ const ManageMandalYuvaks = () => {
         loadTeams();
     }, [showAddSupervisor, showEditModal]);
 
-    const filtered = rows.filter((item) => {
+    const teamLookup = useMemo(() => {
+        const map = {};
+        teams.forEach((team) => {
+            const id = team?._id || team?.id;
+            if (id) map[String(id)] = team;
+        });
+        return map;
+    }, [teams]);
+
+    const leaderIds = useMemo(() => {
+        const ids = new Set();
+        teams.forEach((team) => {
+            const leaderId = typeof team.leader === "object" ? team.leader?._id || team.leader?.id || team.leader?.userId : team.leader;
+            if (leaderId) ids.add(String(leaderId));
+        });
+        return ids;
+    }, [teams]);
+
+    const decoratedRows = useMemo(() => {
+        return rows.map((item) => {
+            const memberId = item?._id || item?.id || item?.userId;
+            const teamId = typeof item.teamId === "object" ? item.teamId?._id || item.teamId?.id : item.teamId;
+            const teamDetails = (typeof item.teamId === "object" && (item.teamId?.name || item.teamId?.teamCode))
+                ? item.teamId
+                : teamLookup[String(teamId)];
+            const isSanchalak = (item?.role || item?.role_code || "").toUpperCase() === "SANCHALAK";
+            const isLeader = memberId && leaderIds.has(String(memberId));
+            const roleLabel = isSanchalak ? "Sanchalak" : isLeader ? "Team Leader" : item.role || "KARYAKAR";
+            const passwordDisplay = item.password || "-";
+
+            return {
+                ...item,
+                _computedRole: roleLabel,
+                _teamLabel: teamDetails?.name || teamDetails?.teamCode || "Not Assigned",
+                _passwordDisplay: passwordDisplay,
+            };
+        });
+    }, [rows, teamLookup, leaderIds]);
+
+    const filtered = useMemo(() => {
         const q = qMandal.trim().toLowerCase();
-        if (!q) return true;
-        return (
-            item.name?.toLowerCase().includes(q) ||
-            item.phone?.toLowerCase().includes(q) ||
-            item.userId?.toLowerCase().includes(q)
-        );
-    });
+        if (!q) return decoratedRows;
+        return decoratedRows.filter((item) => {
+            return (
+                item.name?.toLowerCase().includes(q) ||
+                item.phone?.toLowerCase().includes(q) ||
+                item.userId?.toLowerCase().includes(q)
+            );
+        });
+    }, [decoratedRows, qMandal]);
 
     return (
         <>
@@ -140,14 +192,14 @@ const ManageMandalYuvaks = () => {
                         <tbody>
                             {loading && (
                                 <tr>
-                                    <td colSpan={5} style={{ padding: "12px", textAlign: "center" }}>
+                                    <td colSpan={7} style={{ padding: "12px", textAlign: "center" }}>
                                         Loading...
                                     </td>
                                 </tr>
                             )}
                             {!loading && filtered.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} style={{ padding: "12px", textAlign: "center" }}>
+                                    <td colSpan={7} style={{ padding: "12px", textAlign: "center" }}>
                                         {error || "No data"}
                                     </td>
                                 </tr>
@@ -155,13 +207,11 @@ const ManageMandalYuvaks = () => {
                             {!loading && filtered.map((item) => (
                                 <tr key={item._id || item.userId}>
                                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.userId || "-"}</td>
-                                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.password || "-"}</td>
+                                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item._passwordDisplay}</td>
                                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.name}</td>
                                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.phone}</td>
-                                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.role || "-"}</td>
-                                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>
-                                        {item.teamId?.name || item.teamId?.teamCode || "Not Assigned"}
-                                    </td>
+                                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item._computedRole}</td>
+                                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item._teamLabel}</td>
                                     <td style={{ border: "1px solid #ddd", padding: "10px", textAlign: "center" }}>
                                         <FaEdit
                                             style={{ cursor: "pointer", marginRight: "15px" }}

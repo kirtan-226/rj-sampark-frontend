@@ -1,48 +1,11 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import Header from "../components/Header";
-import { Button } from "reactstrap";
 import { Card, CardActionArea, CardContent, Grid, Typography } from "@mui/material";
-import SupervisorTeams from "../components/SupervisorTeams";
-import CreateTeamModal from "../components/CreateTeamModal";
-import { BACKEND_ENDPOINT } from "../api/api";
 import { useNavigate } from "react-router-dom";
 
 const SanchalakHome = () => {
-  const [showCreateTeam, setShowCreateTeam] = useState(false);
-  const [teams, setTeams] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const navigate = useNavigate();
   const sevakDetails = JSON.parse(localStorage.getItem("sevakDetails") || "{}");
-  const mandalId = sevakDetails?.mandal_id || sevakDetails?.mandalId;
-  const token = localStorage.getItem("authToken");
-  if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
-  axios.defaults.baseURL = BACKEND_ENDPOINT;
-
-  const fetchTeams = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await axios.get(`${BACKEND_ENDPOINT}teams/mandal/${mandalId}`);
-      setTeams(res.data || []);
-    } catch (err) {
-      setTeams([]);
-      setError(err.response?.data?.message || err.message || "Failed to load teams");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-
-    if (!mandalId) {
-      setError("Mandal not set for this sanchalak");
-      return;
-    }
-
-    fetchTeams();
-  }, []);
 
   return (
     <>
@@ -58,9 +21,6 @@ const SanchalakHome = () => {
           }}
         >
           <h5 style={{ margin: 0, whiteSpace: "nowrap" }}>{sevakDetails?.role || "Manage Teams"}</h5>
-          {/* <Button color="primary" onClick={() => setShowCreateTeam(true)}>
-            Create Team
-          </Button> */}
         </div>
 
         <div style={{ padding: "20px 15px" }}>
@@ -164,13 +124,7 @@ const SanchalakHome = () => {
             </Grid>
           </Grid>
         </div>
-
-        {/* <div style={{ padding: "0 15px 20px" }}>
-          <SupervisorTeams teams={teams} loading={loading} error={error} refreshTeams={fetchTeams} />
-        </div> */}
       </div>
-
-      {showCreateTeam && <CreateTeamModal modal={showCreateTeam} setModal={setShowCreateTeam} />}
     </>
   );
 };
