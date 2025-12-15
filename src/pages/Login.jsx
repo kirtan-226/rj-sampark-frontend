@@ -40,11 +40,14 @@ const Login = () => {
         return;
       }
 
+      const assignedMandals = user.assignedMandals || [];
+      const derivedMandalId = user.mandalId || (assignedMandals.length ? assignedMandals[0] : null);
+
       const sevakDetails = {
         ...user,
         sevak_id: user.userId,
         phone_number: user.phone,
-        mandal_id: user.mandalId,
+        mandal_id: derivedMandalId,
         team_id: user.teamId,
         team_name: user.teamName || user.teamCode || null,
         team_code: user.teamCode || null,
@@ -52,6 +55,7 @@ const Login = () => {
         sevak_target: user.sevak_target ?? 0,
         filled_form: user.filled_form ?? 0,
         achieved_target: user.achieved_target ?? 0,
+        assigned_mandals: assignedMandals,
       };
 
       localStorage.setItem("sevakDetails", JSON.stringify(sevakDetails));
