@@ -15,6 +15,14 @@ const Login = () => {
   });
   const navigate = useNavigate();
 
+  // If an admin is already logged in, land them on the admin page right away.
+  React.useEffect(() => {
+    const sevak = JSON.parse(localStorage.getItem("sevakDetails") || "{}");
+    if (sevak?.role === "ADMIN") {
+      navigate("/admin-home");
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     setLoginData({
       ...loginData,

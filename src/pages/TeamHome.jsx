@@ -24,7 +24,7 @@ const TeamHome = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
+    if (token) axios.defaults.headers.common["x-user-id"] = token;
     axios.defaults.baseURL = BACKEND_ENDPOINT;
     fetchAhevaals();
   }, []);
