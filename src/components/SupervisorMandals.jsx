@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Box, CardContent, Chip, Grid, Paper, TextField, Typography } from "@mui/material";
 import { Card } from "reactstrap";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken } from "../api/api";
 import SupervisorTeams from "./SupervisorTeams";
 
 export default function SupervisorMandals() {
@@ -49,7 +49,7 @@ export default function SupervisorMandals() {
       setError("Mandal not set for this sanchalak");
       return;
     }
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (token) {
       axios.defaults.headers.common.Authorization = `Basic ${token}`;
     }

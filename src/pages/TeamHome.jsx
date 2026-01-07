@@ -4,7 +4,7 @@ import { Button } from 'reactstrap';
 import AddMemberModal from '../components/AddMemberModal';
 import { Box, Chip, TextField } from '@mui/material';
 import axios from 'axios';
-import { BACKEND_ENDPOINT } from '../api/api';
+import { BACKEND_ENDPOINT, getAuthToken } from '../api/api';
 
 const TeamHome = () => {
 
@@ -22,9 +22,23 @@ const TeamHome = () => {
   const teamName = me.team_name || me.team_code || me.teamCode || me.team_id || "Team";
   const roleLabel = me.role || me.team_role || me.designation || "Team A";
 
+  const formatDate = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
+
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) axios.defaults.headers.common["x-user-id"] = token;
+    const token = getAuthToken();
+    if (token) {
+      axios.defaults.headers.common["x-user-id"] = token;
+    } else {
+      delete axios.defaults.headers.common["x-user-id"];
+    }
     axios.defaults.baseURL = BACKEND_ENDPOINT;
     fetchAhevaals();
   }, []);
@@ -104,6 +118,7 @@ const TeamHome = () => {
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Phone</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>DOB</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Sampark Date</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Address</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Sampark Grade</th>
                   <th style={{ border: "1px solid #ddd", padding: "10px" }}>Special Experience</th>
@@ -116,7 +131,8 @@ const TeamHome = () => {
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{idx + 1}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.name}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.phone}</td>
-                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.dob.toString().substring(0, 10).split("-").reverse().join("-") || "-"}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{formatDate(item.dob)}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{formatDate(item.samparkDate || item.createdAt)}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.address || "-"}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.grade || "-"}</td>
                     <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.specialExp || "-"}</td>

@@ -21,7 +21,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Header from "../components/Header";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken } from "../api/api";
 
 const AdminHome = () => {
   const stored = JSON.parse(localStorage.getItem("sevakDetails") || "{}");
@@ -41,8 +41,12 @@ const AdminHome = () => {
   const [activeTab, setActiveTab] = useState("ahevaals"); // ahevaals | teams | members
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) axios.defaults.headers.common["x-user-id"] = token;
+    const token = getAuthToken();
+    if (token) {
+      axios.defaults.headers.common["x-user-id"] = token;
+    } else {
+      delete axios.defaults.headers.common["x-user-id"];
+    }
     axios.defaults.baseURL = BACKEND_ENDPOINT;
     fetchMandals();
   }, []);
@@ -53,7 +57,10 @@ const AdminHome = () => {
     try {
       const res = await axios.get(`${BACKEND_ENDPOINT}mandals`);
       const list = Array.isArray(res.data) ? res.data : [];
-      setMandals(list);
+      const filtered = list.filter(
+        (m) => String(m?.name || "").trim().toLowerCase() !== "test"
+      );
+      setMandals(filtered);
     } catch (err) {
       console.error("mandals load error", err);
       setMandals([]);
@@ -319,6 +326,7 @@ const AdminHome = () => {
                         <th style={th}>Name</th>
                         <th style={th}>Phone</th>
                         <th style={th}>DOB</th>
+                        <th style={th}>Sampark Date</th>
                         <th style={th}>Address</th>
                         <th style={th}>Grade</th>
                         <th style={th}>Team</th>
@@ -333,6 +341,11 @@ const AdminHome = () => {
                             <td style={td}>{a.name || "-"}</td>
                             <td style={td}>{a.phone || "-"}</td>
                             <td style={td}>{a.dob ? new Date(a.dob).toLocaleDateString() : "-"}</td>
+                            <td style={td}>
+                              {a.samparkDate || a.createdAt
+                                ? new Date(a.samparkDate || a.createdAt).toLocaleDateString()
+                                : "-"}
+                            </td>
                             <td style={td}>{a.address || "-"}</td>
                             <td style={td}>{a.grade || "-"}</td>
                             <td style={td}>{team?.name || team?.teamCode || "-"}</td>

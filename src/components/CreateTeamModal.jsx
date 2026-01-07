@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken } from "../api/api";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import TextField from "@mui/material/TextField";
@@ -12,7 +12,7 @@ import { FaPlus, FaTrash } from "react-icons/fa";
 function CreateTeamModal({ modal, setModal }) {
   const me = JSON.parse(localStorage.getItem("sevakDetails")) || {};
   const isSanchalak = (me.role || "").toUpperCase() === "SANCHALAK";
-  const token = localStorage.getItem("authToken");
+  const token = getAuthToken();
   if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
   axios.defaults.baseURL = BACKEND_ENDPOINT;
 

@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken, setAuthSession } from "../api/api";
 import Mandir from './../resources/mandir.png';
 import bapsLogo from './../resources/logoBaps.png';
 
@@ -17,6 +17,8 @@ const Login = () => {
 
   // If an admin is already logged in, land them on the admin page right away.
   React.useEffect(() => {
+    const token = getAuthToken();
+    if (!token) return;
     const sevak = JSON.parse(localStorage.getItem("sevakDetails") || "{}");
     if (sevak?.role === "ADMIN") {
       navigate("/admin-home");
@@ -68,7 +70,7 @@ const Login = () => {
 
       localStorage.setItem("sevakDetails", JSON.stringify(sevakDetails));
       const basicToken = btoa(`${loginData.userId.trim()}:${loginData.password}`);
-      localStorage.setItem("authToken", basicToken);
+      setAuthSession(basicToken);
       axios.defaults.headers.common.Authorization = `Basic ${basicToken}`;
       toast.success(message || "Login successful");
 

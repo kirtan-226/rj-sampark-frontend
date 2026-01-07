@@ -6,7 +6,7 @@ import { Box, TextField } from "@mui/material";
 import { toast } from "react-toastify";
 import AddSupervisorModal from "../components/AddSupervisorModal";
 import Header from "../components/Header";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken } from "../api/api";
 
 const ManageSupervisors = () => {
   const [showAddSupervisor, setShowAddSupervisor] = useState(false);
@@ -71,7 +71,7 @@ const ManageSupervisors = () => {
     setLoading(true);
     setError("");
     try {
-      const token = localStorage.getItem("authToken");
+      const token = getAuthToken();
       if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
       axios.defaults.baseURL = BACKEND_ENDPOINT;
 

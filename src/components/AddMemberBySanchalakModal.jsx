@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken } from "../api/api";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import TextField from "@mui/material/TextField";
@@ -9,7 +9,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { Button, InputLabel, MenuItem, Select } from "@mui/material";
 
 function AddMemberBySanchalakModal({ modal, setModal, teams = [], onSuccess }) {
-  const token = localStorage.getItem("authToken");
+  const token = getAuthToken();
   if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
   axios.defaults.baseURL = BACKEND_ENDPOINT;
 
@@ -21,6 +21,7 @@ function AddMemberBySanchalakModal({ modal, setModal, teams = [], onSuccess }) {
     address: "",
     specialExp: "",
     dob: "",
+    samparkDate: "",
     teamId: "",
   });
   const toggle = () => setModal(!modal);
@@ -73,13 +74,22 @@ function AddMemberBySanchalakModal({ modal, setModal, teams = [], onSuccess }) {
         address: formData.address,
         specialExp: formData.specialExp,
         dob: formData.dob,
+        samparkDate: formData.samparkDate || null,
         teamId: formData.teamId,
       };
       console.log("Submitting ahevaal with payload:", payload);
       await axios.post(`${BACKEND_ENDPOINT}ahevaals`, payload);
       toast.success("Ahevaal submitted");
       if (onSuccess) onSuccess();
-      setFormData({ name: "", phone: "", address: "", specialExp: "", dob: "", teamId: "" });
+      setFormData({
+        name: "",
+        phone: "",
+        address: "",
+        specialExp: "",
+        dob: "",
+        samparkDate: "",
+        teamId: "",
+      });
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Failed to submit";
       toast.error(msg);
@@ -171,6 +181,19 @@ function AddMemberBySanchalakModal({ modal, setModal, teams = [], onSuccess }) {
               color="secondary"
               error={!!errors.dob}
               helperText={errors.dob}
+              fullWidth
+            />
+          </FormControl>
+
+          <FormControl fullWidth variant="outlined" margin="normal">
+            <TextField
+              name="samparkDate"
+              label="Sampark Date"
+              type="date"
+              value={formData.samparkDate}
+              onChange={handleChange}
+              variant="outlined"
+              color="secondary"
               fullWidth
             />
           </FormControl>

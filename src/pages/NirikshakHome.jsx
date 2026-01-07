@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import { Card, CardActionArea, CardContent, Grid, Typography, Box, FormControl, InputLabel, Select, MenuItem, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken } from "../api/api";
 
 const NirikshakHome = () => {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const NirikshakHome = () => {
   }, [assignedMandals, mandals]);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
     axios.defaults.baseURL = BACKEND_ENDPOINT;
 

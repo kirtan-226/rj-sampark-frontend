@@ -11,6 +11,7 @@ import {
   Button,
 } from "reactstrap";
 import { useNavigate } from "react-router-dom";
+import { clearAuthSession } from "../api/api";
 
 function Header(props) {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +20,7 @@ function Header(props) {
   const toggle = () => setIsOpen(!isOpen);
 
   const handleLogout = () => {
-    localStorage.removeItem("sevakDetails");
+    clearAuthSession();
     navigate("/");
   };
   const handleTeamDetails = () => {

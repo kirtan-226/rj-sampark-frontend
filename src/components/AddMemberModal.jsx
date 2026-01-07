@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken } from "../api/api";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import TextField from "@mui/material/TextField";
@@ -10,7 +10,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { Button } from "@mui/material";
 
 function AddMemberModal({ modal, setModal, onSuccess }) {
-  const token = localStorage.getItem("authToken");
+  const token = getAuthToken();
   if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
   axios.defaults.baseURL = BACKEND_ENDPOINT;
 
@@ -22,6 +22,7 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
     address: "",
     specialExp: "",
     dob: "",
+    samparkDate: "",
     grade: "A",
   });
   const toggle = () => setModal(!modal);
@@ -70,12 +71,21 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
         address: formData.address,
         specialExp: formData.specialExp,
         dob: formData.dob,
+        samparkDate: formData.samparkDate || null,
         grade: formData.grade,
       };
       await axios.post(`${BACKEND_ENDPOINT}ahevaals`, payload);
       toast.success("Ahevaal submitted");
       if (onSuccess) onSuccess();
-      setFormData({ name: "", phone: "", address: "", specialExp: "", dob: "", grade: "A" });
+      setFormData({
+        name: "",
+        phone: "",
+        address: "",
+        specialExp: "",
+        dob: "",
+        samparkDate: "",
+        grade: "A",
+      });
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Failed to submit";
       toast.error(msg);
@@ -142,6 +152,19 @@ function AddMemberModal({ modal, setModal, onSuccess }) {
               color="secondary"
               error={!!errors.dob}
               helperText={errors.dob}
+              fullWidth
+            />
+          </FormControl>
+
+          <FormControl fullWidth variant="outlined" margin="normal">
+            <TextField
+              name="samparkDate"
+              label="Sampark Date"
+              type="date"
+              value={formData.samparkDate}
+              onChange={handleChange}
+              variant="outlined"
+              color="secondary"
               fullWidth
             />
           </FormControl>

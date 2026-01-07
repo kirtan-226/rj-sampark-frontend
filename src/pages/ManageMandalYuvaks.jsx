@@ -7,7 +7,7 @@ import AddMandalYuvakModal from '../components/AddMandalYuvakModal';
 import EditMandalYuvakModal from '../components/EditMandalYuvakModal';
 import { Box, TextField } from '@mui/material';
 import axios from 'axios';
-import { BACKEND_ENDPOINT } from '../api/api';
+import { BACKEND_ENDPOINT, getAuthToken } from '../api/api';
 import { toast } from 'react-toastify';
 
 const ManageMandalYuvaks = () => {
@@ -93,7 +93,7 @@ const ManageMandalYuvaks = () => {
     };
 
     useEffect(() => {
-        const token = localStorage.getItem("authToken");
+        const token = getAuthToken();
         if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
         axios.defaults.baseURL = BACKEND_ENDPOINT;
         loadData();

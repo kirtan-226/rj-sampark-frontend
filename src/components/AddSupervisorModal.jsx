@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import CircularProgress from "@mui/material/CircularProgress";
 import { Button, InputLabel, MenuItem, Select } from "@mui/material";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken } from "../api/api";
 
 function AddSupervisorModal({ modal, setModal, onCreated }) {
   const [loader, setLoader] = useState(false);
@@ -137,7 +137,7 @@ function AddSupervisorModal({ modal, setModal, onCreated }) {
 
   useEffect(() => {
     if (!modal) return;
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
     axios.defaults.baseURL = BACKEND_ENDPOINT;
 

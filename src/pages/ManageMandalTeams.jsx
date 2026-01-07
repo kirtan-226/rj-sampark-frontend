@@ -5,7 +5,7 @@ import SupervisorTeams from '../components/SupervisorTeams';
 import CreateTeamModal from '../components/CreateTeamModal';
 import AddMandalYuvakModal from '../components/AddMandalYuvakModal';
 import axios from 'axios';
-import { BACKEND_ENDPOINT } from '../api/api';
+import { BACKEND_ENDPOINT, getAuthToken } from '../api/api';
 import { useNavigate } from 'react-router-dom';
 
 const ManageMandalTeams = () => {
@@ -39,7 +39,7 @@ const ManageMandalTeams = () => {
     }, [mandalId]);
 
     useEffect(() => {
-        const token = localStorage.getItem("authToken");
+        const token = getAuthToken();
         if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
         axios.defaults.baseURL = BACKEND_ENDPOINT;
         fetchTeams();

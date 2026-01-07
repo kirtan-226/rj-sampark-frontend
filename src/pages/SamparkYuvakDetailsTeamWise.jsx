@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import axios from "axios";
-import { BACKEND_ENDPOINT } from "../api/api";
+import { BACKEND_ENDPOINT, getAuthToken } from "../api/api";
 import AddMemberModal from "../components/AddMemberModal";
 import { Button } from "reactstrap";
 import AddMemberBySanchalakModal from "../components/AddMemberBySanchalakModal";
@@ -21,6 +21,16 @@ export default function SamparkYuvakDetailsTeamWise() {
     }
   })();
   const mandalId = sevakDetails?.mandal_id || sevakDetails?.mandalId || null;
+
+  const formatDate = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
 
   const toggleOpen = (teamId) => setOpenTeam(openTeam === teamId ? null : teamId);
 
@@ -60,7 +70,7 @@ export default function SamparkYuvakDetailsTeamWise() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (token) axios.defaults.headers.common.Authorization = `Basic ${token}`;
     axios.defaults.baseURL = BACKEND_ENDPOINT;
     fetchTeamsWithAhevaals();
@@ -138,6 +148,7 @@ export default function SamparkYuvakDetailsTeamWise() {
                           <th style={th}>Name</th>
                           <th style={th}>Phone</th>
                           <th style={th}>DOB</th>
+                          <th style={th}>Sampark Date</th>
                           <th style={th}>Address</th>
                           <th style={th}>Special Experience</th>
                         </tr>
@@ -148,14 +159,15 @@ export default function SamparkYuvakDetailsTeamWise() {
                             <td style={td}>{idx + 1}</td>
                             <td style={td}>{a.name || "-"}</td>
                             <td style={td}>{a.phone || "-"}</td>
-                            <td style={td}>{a.dob.toString().substring(0, 10).split("-").reverse().join("-") || "-"}</td>
+                            <td style={td}>{formatDate(a.dob)}</td>
+                            <td style={td}>{formatDate(a.samparkDate || a.createdAt)}</td>
                             <td style={td}>{a.address || "-"}</td>
                             <td style={td}>{a.specialExp || "-"}</td>
                           </tr>
                         ))}
                         {(team.ahevaals || []).length === 0 && (
                           <tr>
-                            <td colSpan={6} style={{ ...td, textAlign: "center" }}>
+                            <td colSpan={7} style={{ ...td, textAlign: "center" }}>
                               No ahevaals for this team.
                             </td>
                           </tr>
